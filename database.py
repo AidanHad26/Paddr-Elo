@@ -42,6 +42,7 @@ def init_db():
                     elo        REAL NOT NULL DEFAULT 1000.0,
                     wins       INTEGER NOT NULL DEFAULT 0,
                     losses     INTEGER NOT NULL DEFAULT 0,
+                    lapped     INTEGER NOT NULL DEFAULT 0,
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 )
             """)
@@ -53,7 +54,7 @@ def init_db():
                     team2_player1_id INTEGER NOT NULL REFERENCES players(id),
                     team2_player2_id INTEGER NOT NULL REFERENCES players(id),
                     winning_team     INTEGER NOT NULL CHECK (winning_team IN (1, 2)),
-                    cups_left        INTEGER NOT NULL CHECK (cups_left BETWEEN 1 AND 5),
+                    cups_left        REAL NOT NULL CHECK (cups_left >= 0.5 AND cups_left <= 5),
                     played_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 )
             """)
@@ -67,6 +68,27 @@ def init_db():
                     delta      REAL NOT NULL
                 )
             """)
+
+    # Migrations for existing databases
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            # Add lapped column if missing
+            cur.execute("""
+                ALTER TABLE players ADD COLUMN IF NOT EXISTS lapped INTEGER NOT NULL DEFAULT 0
+            """)
+            # Upgrade cups_left from INTEGER to REAL if needed
+            cur.execute("""
+                SELECT data_type FROM information_schema.columns
+                WHERE table_name = 'games' AND column_name = 'cups_left'
+            """)
+            row = cur.fetchone()
+            if row and row["data_type"] == "integer":
+                cur.execute("ALTER TABLE games ALTER COLUMN cups_left TYPE REAL")
+                cur.execute("ALTER TABLE games DROP CONSTRAINT IF EXISTS games_cups_left_check")
+                cur.execute("""
+                    ALTER TABLE games ADD CONSTRAINT games_cups_left_check
+                    CHECK (cups_left >= 0.5 AND cups_left <= 5)
+                """)
 
     # Seed admin account from environment variables
     admin_user = os.environ.get("ADMIN_USERNAME")
@@ -144,7 +166,7 @@ def get_leaderboard():
     with get_db() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, name, elo, wins, losses FROM players ORDER BY elo DESC"
+                "SELECT id, name, elo, wins, losses, lapped FROM players ORDER BY elo DESC"
             )
             return cur.fetchall()
 
@@ -224,11 +246,18 @@ def record_game(t1p1, t1p2, t2p1, t2p2, winner, cups_left,
                      elo_result["winner_new_elos"][i], elo_result["winner_deltas"][i]),
                 )
 
+            lapped = cups_left == 5
             for i, pid in enumerate(loser_ids):
-                cur.execute(
-                    "UPDATE players SET elo = %s, losses = losses + 1 WHERE id = %s",
-                    (elo_result["loser_new_elos"][i], pid),
-                )
+                if lapped:
+                    cur.execute(
+                        "UPDATE players SET elo = %s, losses = losses + 1, lapped = lapped + 1 WHERE id = %s",
+                        (elo_result["loser_new_elos"][i], pid),
+                    )
+                else:
+                    cur.execute(
+                        "UPDATE players SET elo = %s, losses = losses + 1 WHERE id = %s",
+                        (elo_result["loser_new_elos"][i], pid),
+                    )
                 cur.execute(
                     "INSERT INTO elo_history (game_id, player_id, elo_before, elo_after, delta) "
                     "VALUES (%s, %s, %s, %s, %s)",
@@ -272,7 +301,7 @@ def delete_game(game_id):
     with get_db() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT winning_team, team1_player1_id, team1_player2_id, "
+                "SELECT winning_team, cups_left, team1_player1_id, team1_player2_id, "
                 "team2_player1_id, team2_player2_id FROM games WHERE id = %s",
                 (game_id,),
             )
@@ -305,6 +334,11 @@ def delete_game(game_id):
                 cur.execute(
                     "UPDATE players SET losses = GREATEST(losses - 1, 0) WHERE id = %s", (pid,)
                 )
+            if game["cups_left"] == 5:
+                for pid in loser_ids:
+                    cur.execute(
+                        "UPDATE players SET lapped = GREATEST(lapped - 1, 0) WHERE id = %s", (pid,)
+                    )
 
             cur.execute("DELETE FROM elo_history WHERE game_id = %s", (game_id,))
             cur.execute("DELETE FROM games WHERE id = %s", (game_id,))

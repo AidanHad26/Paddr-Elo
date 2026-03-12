@@ -67,11 +67,16 @@
       <div class="form-group" style="flex: 1; min-width: 180px;">
         <label for="cups_left">Cups Left (losing team)</label>
         <select id="cups_left" name="cups_left" required>
-          <option value="5">5 — Shutout (no cups made)</option>
+          <option value="5">5 — Lapped (no cups made)</option>
+          <option value="4.5">4.5</option>
           <option value="4">4 — Dominant win</option>
+          <option value="3.5">3.5</option>
           <option value="3" selected>3 — Solid win</option>
+          <option value="2.5">2.5</option>
           <option value="2">2 — Close game</option>
+          <option value="1.5">1.5</option>
           <option value="1">1 — Very close</option>
+          <option value="0.5">0.5 — Last cup</option>
         </select>
         <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 6px;">
           How many cups did the losing team still have when the winners finished?

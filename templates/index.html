@@ -18,6 +18,7 @@
         <th>W</th>
         <th>L</th>
         <th>Win %</th>
+        <th>Lapped</th>
       </tr>
     </thead>
     <tbody>
@@ -41,6 +42,7 @@
             —
           {% endif %}
         </td>
+        <td class="stat-cell lapped-stat">{{ player.lapped if player.lapped else '—' }}</td>
       </tr>
       {% endfor %}
     </tbody>

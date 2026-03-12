@@ -103,7 +103,7 @@ def record_game():
         t2p1 = int(request.form["t2p1"])
         t2p2 = int(request.form["t2p2"])
         winner = int(request.form["winner"])
-        cups_left = int(request.form["cups_left"])
+        cups_left = float(request.form["cups_left"])
     except (KeyError, ValueError):
         flash("Invalid form submission. Please fill out all fields.", "error")
         return redirect(url_for("record_game_page"))
@@ -117,8 +117,9 @@ def record_game():
         flash("Please select a winning team.", "error")
         return redirect(url_for("record_game_page"))
 
-    if cups_left not in range(1, 6):
-        flash("Cups left must be between 1 and 5.", "error")
+    valid_cups = {i / 2 for i in range(1, 11)}  # 0.5, 1.0, 1.5, ..., 5.0
+    if cups_left not in valid_cups:
+        flash("Cups left must be between 0.5 and 5 in 0.5 increments.", "error")
         return redirect(url_for("record_game_page"))
 
     rows_by_id = database.get_players_by_ids(ids)

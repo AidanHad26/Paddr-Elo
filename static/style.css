@@ -197,8 +197,9 @@ h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 16px; color: var(--text
 .name-cell { font-weight: 600; font-size: 1rem; }
 .elo-cell  { font-weight: 700; font-size: 1.05rem; color: var(--primary); }
 .stat-cell { color: var(--text-muted); }
-.win-stat  { color: var(--win); }
-.loss-stat { color: var(--loss); }
+.win-stat    { color: var(--win); }
+.loss-stat   { color: var(--loss); }
+.lapped-stat { color: #ff9800; }
 
 .rank-1 td { background: rgba(255, 215, 0, 0.04); }
 .rank-2 td { background: rgba(192, 192, 192, 0.03); }
