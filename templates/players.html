@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Players — Paddr Elo{% endblock %}
+
+{% block content %}
+<h1>Players</h1>
+
+<div class="card">
+  <h2>Add Player</h2>
+  <form method="POST" action="{{ url_for('add_player') }}" class="add-player-form">
+    <div style="flex:1">
+      <label for="name">Player Name</label>
+      <input type="text" id="name" name="name" placeholder="e.g. Alex" maxlength="50" required autocomplete="off">
+    </div>
+    <button type="submit" class="btn btn-primary">Add Player</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Roster ({{ players|length }} player{% if players|length != 1 %}s{% endif %})</h2>
+  {% if players %}
+  <table class="players-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Current Elo</th>
+        <th>Joined</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in players %}
+      <tr>
+        <td class="player-name">{{ player.name }}</td>
+        <td class="elo-cell">{{ "%.1f"|format(player.elo) }}</td>
+        <td style="color: var(--text-muted); font-size: 0.85rem;">{{ player.created_at or '—' }}</td>
+        <td>
+          <div style="display: flex; gap: 8px;">
+            <a href="{{ url_for('edit_player', player_id=player.id) }}" class="btn btn-secondary" style="font-size: 0.8rem; padding: 4px 12px;">Edit</a>
+            <form method="POST" action="{{ url_for('delete_player', player_id=player.id) }}"
+                  onsubmit="return confirm('Delete {{ player.name }}? This will fail if they have games recorded.')">
+              <button type="submit" class="btn btn-danger" style="font-size: 0.8rem; padding: 4px 12px;">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color: var(--text-muted);">No players yet. Add one above to get started.</p>
+  {% endif %}
+</div>
+{% endblock %}

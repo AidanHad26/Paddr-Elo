@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Record Game — Paddr Elo{% endblock %}
+
+{% block content %}
+<h1>Record Game</h1>
+
+<form method="POST" action="{{ url_for('record_game') }}" data-game-form>
+
+  <div class="teams-grid">
+    <!-- Team 1 -->
+    <div class="team-card team-1">
+      <div class="team-label">Team 1</div>
+
+      <div class="form-group">
+        <label for="t1p1">Player 1</label>
+        <select id="t1p1" name="t1p1" data-player-select required>
+          <option value="">— Select player —</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="t1p2">Player 2</label>
+        <select id="t1p2" name="t1p2" data-player-select required>
+          <option value="">— Select player —</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Team 2 -->
+    <div class="team-card team-2">
+      <div class="team-label">Team 2</div>
+
+      <div class="form-group">
+        <label for="t2p1">Player 1</label>
+        <select id="t2p1" name="t2p1" data-player-select required>
+          <option value="">— Select player —</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="t2p2">Player 2</label>
+        <select id="t2p2" name="t2p2" data-player-select required>
+          <option value="">— Select player —</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-card">
+    <div style="display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start;">
+
+      <div class="form-group" style="flex: 1; min-width: 200px;">
+        <label>Winning Team</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="winner" value="1" required>
+            Team 1 Won
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="winner" value="2">
+            Team 2 Won
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" style="flex: 1; min-width: 180px;">
+        <label for="cups_left">Cups Left (losing team)</label>
+        <select id="cups_left" name="cups_left" required>
+          <option value="5">5 — Shutout (no cups made)</option>
+          <option value="4">4 — Dominant win</option>
+          <option value="3" selected>3 — Solid win</option>
+          <option value="2">2 — Close game</option>
+          <option value="1">1 — Very close</option>
+        </select>
+        <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 6px;">
+          How many cups did the losing team still have when the winners finished?
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary" style="font-size: 1rem; padding: 12px 28px;">
+    Record Game
+  </button>
+
+</form>
+
+{% if not request.args.get('players_exist') %}
+<p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 20px;">
+  Need to add players first? <a href="{{ url_for('players') }}" style="color: var(--primary);">Go to Players</a>
+</p>
+{% endif %}
+{% endblock %}

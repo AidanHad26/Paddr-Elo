@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard — Paddr Elo{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Leaderboard</h1>
+  <a href="{{ url_for('record_game_page') }}" class="btn btn-primary">+ Record Game</a>
+</div>
+
+{% if players %}
+<div class="table-wrapper">
+  <table class="leaderboard-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Player</th>
+        <th>Elo</th>
+        <th>W</th>
+        <th>L</th>
+        <th>Win %</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in players %}
+      <tr {% if loop.index == 1 %}class="rank-1"{% elif loop.index == 2 %}class="rank-2"{% elif loop.index == 3 %}class="rank-3"{% endif %}>
+        <td class="rank-cell">
+          {% if loop.index == 1 %}🥇
+          {% elif loop.index == 2 %}🥈
+          {% elif loop.index == 3 %}🥉
+          {% else %}{{ loop.index }}{% endif %}
+        </td>
+        <td class="name-cell">{{ player.name }}</td>
+        <td class="elo-cell">{{ "%.1f"|format(player.elo) }}</td>
+        <td class="stat-cell win-stat">{{ player.wins }}</td>
+        <td class="stat-cell loss-stat">{{ player.losses }}</td>
+        <td class="stat-cell">
+          {% set total = player.wins + player.losses %}
+          {% if total > 0 %}
+            {{ "%.1f"|format(player.wins / total * 100) }}%
+          {% else %}
+            —
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <p>No players yet.</p>
+  <a href="{{ url_for('players') }}" class="btn btn-primary">Add Players</a>
+</div>
+{% endif %}
+{% endblock %}

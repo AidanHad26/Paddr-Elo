@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Edit Player — Paddr Elo{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Edit Player</h1>
+  <a href="{{ url_for('players') }}" class="btn btn-secondary">← Back</a>
+</div>
+
+<div class="card" style="max-width: 420px;">
+  <form method="POST" action="{{ url_for('edit_player', player_id=player.id) }}">
+    <div class="form-group">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" value="{{ player.name }}" maxlength="50" required autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label for="elo">Elo Rating</label>
+      <input type="number" id="elo" name="elo" value="{{ "%.1f"|format(player.elo) }}" step="0.1" required>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 6px;">
+        Only adjust Elo here to correct errors. Normal changes happen automatically from games.
+      </p>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}History — Paddr Elo{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Game History</h1>
+  <a href="{{ url_for('record_game_page') }}" class="btn btn-primary">+ Record Game</a>
+</div>
+
+{% if games %}
+<div class="history-list">
+  {% for game in games %}
+  {% set t1_won = game.winning_team == 1 %}
+  {% set t2_won = game.winning_team == 2 %}
+
+  <div class="game-card">
+
+    <!-- Team 1 -->
+    <div class="game-team">
+      <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #4a9eff; margin-bottom: 6px;">
+        Team 1 {% if t1_won %}👑{% endif %}
+      </div>
+      <div class="player-row">
+        <span class="player-name">{{ game.t1p1_name }}</span>
+        {% if game.t1p1_delta is not none %}
+          <span class="delta {% if game.t1p1_delta >= 0 %}delta-pos{% else %}delta-neg{% endif %}">
+            {% if game.t1p1_delta >= 0 %}+{% endif %}{{ "%.1f"|format(game.t1p1_delta) }}
+          </span>
+        {% endif %}
+      </div>
+      <div class="player-row">
+        <span class="player-name">{{ game.t1p2_name }}</span>
+        {% if game.t1p2_delta is not none %}
+          <span class="delta {% if game.t1p2_delta >= 0 %}delta-pos{% else %}delta-neg{% endif %}">
+            {% if game.t1p2_delta >= 0 %}+{% endif %}{{ "%.1f"|format(game.t1p2_delta) }}
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- VS -->
+    <div class="vs-badge">VS</div>
+
+    <!-- Team 2 -->
+    <div class="game-team">
+      <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary); margin-bottom: 6px;">
+        Team 2 {% if t2_won %}👑{% endif %}
+      </div>
+      <div class="player-row">
+        <span class="player-name">{{ game.t2p1_name }}</span>
+        {% if game.t2p1_delta is not none %}
+          <span class="delta {% if game.t2p1_delta >= 0 %}delta-pos{% else %}delta-neg{% endif %}">
+            {% if game.t2p1_delta >= 0 %}+{% endif %}{{ "%.1f"|format(game.t2p1_delta) }}
+          </span>
+        {% endif %}
+      </div>
+      <div class="player-row">
+        <span class="player-name">{{ game.t2p2_name }}</span>
+        {% if game.t2p2_delta is not none %}
+          <span class="delta {% if game.t2p2_delta >= 0 %}delta-pos{% else %}delta-neg{% endif %}">
+            {% if game.t2p2_delta >= 0 %}+{% endif %}{{ "%.1f"|format(game.t2p2_delta) }}
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Result info -->
+    <div class="result-info">
+      <span class="winner-badge">Team {{ game.winning_team }} Won</span>
+      <span class="cups-badge">{{ game.cups_left }} cup{% if game.cups_left != 1 %}s{% endif %} left</span>
+      <span class="game-date">{{ game.played_at or '' }}</span>
+      {% if current_user.is_admin %}
+      <form method="POST" action="{{ url_for('delete_game', game_id=game.id) }}"
+            onsubmit="return confirm('Delete this game and reverse the Elo changes?')"
+            style="margin-top: 6px;">
+        <button type="submit" class="btn btn-danger" style="font-size: 0.75rem; padding: 3px 10px;">Delete</button>
+      </form>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <p>No games recorded yet.</p>
+  <a href="{{ url_for('record_game_page') }}" class="btn btn-primary">Record First Game</a>
+</div>
+{% endif %}
+{% endblock %}

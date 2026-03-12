@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import sqlite3; print\\(''sqlite3 version:'', sqlite3.sqlite_version\\)\")",
+      "Bash(python3 -c \"import flask; print\\(''Flask version:'', flask.__version__\\)\")",
+      "Bash(python3 -c \"import database; database.init_db\\(\\); print\\(''DB OK''\\)\")"
+    ]
+  }
+}

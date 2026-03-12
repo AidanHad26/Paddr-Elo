@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Users — Paddr Elo{% endblock %}
+
+{% block content %}
+<h1>User Management</h1>
+
+<div class="card">
+  <h2>Add User</h2>
+  <form method="POST" action="{{ url_for('admin_add_user') }}">
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+      <div class="form-group" style="flex: 1; min-width: 160px; margin-bottom: 0;">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" maxlength="50" required autocomplete="off">
+      </div>
+      <div class="form-group" style="flex: 1; min-width: 160px; margin-bottom: 0;">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center; gap: 8px; padding-bottom: 2px;">
+        <input type="checkbox" id="is_admin" name="is_admin" style="width: auto;">
+        <label for="is_admin" style="margin: 0; text-transform: none; letter-spacing: 0; font-size: 0.9rem; color: var(--text);">Admin</label>
+      </div>
+      <button type="submit" class="btn btn-primary" style="margin-bottom: 0;">Add User</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Users ({{ users|length }})</h2>
+  {% if users %}
+  <table class="players-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Role</th>
+        <th>Joined</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td class="player-name">{{ user.username }}</td>
+        <td>
+          {% if user.is_admin %}
+            <span class="admin-badge">admin</span>
+          {% else %}
+            <span style="color: var(--text-muted); font-size: 0.85rem;">user</span>
+          {% endif %}
+        </td>
+        <td style="color: var(--text-muted); font-size: 0.85rem;">{{ user.created_at or '—' }}</td>
+        <td>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <!-- Reset password -->
+            <form method="POST" action="{{ url_for('admin_reset_password', user_id=user.id) }}"
+                  style="display: flex; gap: 6px; align-items: center;"
+                  onsubmit="return confirm('Reset password for {{ user.username }}?')">
+              <input type="password" name="new_password" placeholder="New password"
+                     style="width: 140px; padding: 4px 8px; font-size: 0.85rem;" required>
+              <button type="submit" class="btn btn-secondary" style="font-size: 0.8rem; padding: 4px 10px;">Reset</button>
+            </form>
+            <!-- Delete -->
+            {% if user.id != current_user.id %}
+            <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}"
+                  onsubmit="return confirm('Delete user {{ user.username }}?')">
+              <button type="submit" class="btn btn-danger" style="font-size: 0.8rem; padding: 4px 12px;">Delete</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color: var(--text-muted);">No users yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

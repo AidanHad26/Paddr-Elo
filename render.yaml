@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: paddr-elo-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: paddr-elo-db
+          property: connectionString
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: paddr-elo-db
+    databaseName: paddr_elo
+    user: paddr_elo
