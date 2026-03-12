@@ -24,7 +24,7 @@
         <th>Name</th>
         <th>Current Elo</th>
         <th>Joined</th>
-        <th>Actions</th>
+        {% if current_user.is_authenticated and current_user.is_admin %}<th>Actions</th>{% endif %}
       </tr>
     </thead>
     <tbody>
@@ -33,6 +33,7 @@
         <td class="player-name">{{ player.name }}</td>
         <td class="elo-cell">{{ "%.1f"|format(player.elo) }}</td>
         <td style="color: var(--text-muted); font-size: 0.85rem;">{{ player.created_at or '—' }}</td>
+        {% if current_user.is_authenticated and current_user.is_admin %}
         <td>
           <div style="display: flex; gap: 8px;">
             <a href="{{ url_for('edit_player', player_id=player.id) }}" class="btn btn-secondary" style="font-size: 0.8rem; padding: 4px 12px;">Edit</a>
@@ -42,6 +43,7 @@
             </form>
           </div>
         </td>
+        {% endif %}
       </tr>
       {% endfor %}
     </tbody>

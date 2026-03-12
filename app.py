@@ -81,7 +81,6 @@ def logout():
 # ---------------------------------------------------------------------------
 
 @app.route("/")
-@login_required
 def index():
     players = database.get_leaderboard()
     return render_template("index.html", players=players)
@@ -92,13 +91,11 @@ def index():
 # ---------------------------------------------------------------------------
 
 @app.route("/record")
-@login_required
 def record_game_page():
     return render_template("record_game.html")
 
 
 @app.route("/record", methods=["POST"])
-@login_required
 def record_game():
     try:
         t1p1 = int(request.form["t1p1"])
@@ -165,27 +162,22 @@ def record_game():
 # ---------------------------------------------------------------------------
 
 @app.route("/history")
-@login_required
 def history():
     games = database.get_game_history()
     return render_template("history.html", games=games)
 
 
 # ---------------------------------------------------------------------------
-# Players (admin only)
+# Players — anyone can view and add; admin-only actions handled below
 # ---------------------------------------------------------------------------
 
 @app.route("/players")
-@login_required
-@admin_required
 def players():
     all_players = database.get_all_players()
     return render_template("players.html", players=all_players)
 
 
 @app.route("/players/add", methods=["POST"])
-@login_required
-@admin_required
 def add_player():
     name = request.form.get("name", "").strip()
     if not name or len(name) > 50:
@@ -195,7 +187,7 @@ def add_player():
         database.add_player(name)
         flash(f'Player "{name}" added!', "success")
     except psycopg2.IntegrityError:
-        flash(f'A player named "{name}" already exists.', "error")
+        flash(f'"{name}" is already on the roster.', "error")
     return redirect(url_for("players"))
 
 
@@ -315,7 +307,6 @@ def admin_reset_password(user_id):
 # ---------------------------------------------------------------------------
 
 @app.route("/api/players")
-@login_required
 def api_players():
     players = database.get_all_players()
     return jsonify([

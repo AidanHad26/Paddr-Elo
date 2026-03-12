@@ -12,15 +12,19 @@
     <div class="nav-links">
       <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>Leaderboard</a>
       <a href="{{ url_for('record_game_page') }}" {% if request.endpoint == 'record_game_page' %}class="active"{% endif %}>Record Game</a>
+      <a href="{{ url_for('players') }}" {% if request.endpoint in ('players', 'add_player', 'edit_player', 'delete_player') %}class="active"{% endif %}>Players</a>
       <a href="{{ url_for('history') }}" {% if request.endpoint == 'history' %}class="active"{% endif %}>History</a>
-      {% if current_user.is_admin %}
-        <a href="{{ url_for('players') }}" {% if request.endpoint in ('players', 'add_player', 'edit_player', 'delete_player') %}class="active"{% endif %}>Players</a>
+      {% if current_user.is_authenticated and current_user.is_admin %}
         <a href="{{ url_for('admin_users') }}" {% if request.endpoint in ('admin_users', 'admin_add_user', 'admin_delete_user', 'admin_reset_password') %}class="active"{% endif %}>Users</a>
       {% endif %}
     </div>
     <div class="nav-user">
-      <span class="nav-username">{{ current_user.username }}{% if current_user.is_admin %} <span class="admin-badge">admin</span>{% endif %}</span>
-      <a href="{{ url_for('logout') }}" class="btn btn-secondary" style="font-size: 0.8rem; padding: 5px 12px;">Log out</a>
+      {% if current_user.is_authenticated %}
+        <span class="nav-username">{{ current_user.username }} <span class="admin-badge">admin</span></span>
+        <a href="{{ url_for('logout') }}" class="btn btn-secondary" style="font-size: 0.8rem; padding: 5px 12px;">Log out</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn btn-secondary" style="font-size: 0.8rem; padding: 5px 12px;">Admin Login</a>
+      {% endif %}
     </div>
   </nav>
 
