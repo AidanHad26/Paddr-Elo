@@ -1,3 +1,6 @@
+import math
+
+
 def team_elo(elo1: float, elo2: float) -> float:
     """Average Elo of two players, used as the team's combined rating."""
     return (elo1 + elo2) / 2.0
@@ -8,13 +11,14 @@ def expected_score(my_team_elo: float, opponent_team_elo: float) -> float:
     return 1.0 / (1.0 + 10.0 ** ((opponent_team_elo - my_team_elo) / 400.0))
 
 
-def k_adjusted(cups_left: int, k_base: float = 32.0) -> float:
+def k_adjusted(cups_left: float) -> float:
     """
-    K-factor scaled by margin of victory.
-      cups_left=5 (shutout)  -> K = 32.0  (maximum swing)
-      cups_left=1 (very close) -> K = 6.4  (minimal swing)
+    K-factor scaled logarithmically by margin of victory.
+      cups_left=5 (lapped)     -> K = 32.0
+      cups_left=0.5 (last cup) -> K ~19.6
+    Formula: K = 16 + 16 * log2(cups_left + 1) / log2(6)
     """
-    return k_base * (cups_left / 5.0)
+    return 16.0 + 16.0 * math.log2(cups_left + 1) / math.log2(6)
 
 
 def calculate_elo_changes(
