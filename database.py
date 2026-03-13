@@ -246,7 +246,7 @@ def record_game(t1p1, t1p2, t2p1, t2p2, winner, cups_left,
                      elo_result["winner_new_elos"][i], elo_result["winner_deltas"][i]),
                 )
 
-            lapped = cups_left == 5
+            lapped = cups_left >= 4.5
             for i, pid in enumerate(loser_ids):
                 if lapped:
                     cur.execute(
@@ -334,7 +334,7 @@ def delete_game(game_id):
                 cur.execute(
                     "UPDATE players SET losses = GREATEST(losses - 1, 0) WHERE id = %s", (pid,)
                 )
-            if game["cups_left"] == 5:
+            if game["cups_left"] >= 4.5:
                 for pid in loser_ids:
                     cur.execute(
                         "UPDATE players SET lapped = GREATEST(lapped - 1, 0) WHERE id = %s", (pid,)
