@@ -282,23 +282,7 @@ def edit_game(game_id):
         flash("One or more selected players were not found.", "error")
         return redirect(url_for("edit_game_page", game_id=game_id))
 
-    if winner == 1:
-        winner_ids = [t1p1, t1p2]
-        loser_ids  = [t2p1, t2p2]
-    else:
-        winner_ids = [t2p1, t2p2]
-        loser_ids  = [t1p1, t1p2]
-
-    result = elo_module.calculate_elo_changes(
-        winner_elos=(rows_by_id[winner_ids[0]]["elo"], rows_by_id[winner_ids[1]]["elo"]),
-        loser_elos=(rows_by_id[loser_ids[0]]["elo"],  rows_by_id[loser_ids[1]]["elo"]),
-        cups_left=cups_left,
-    )
-
-    success = database.edit_game(
-        game_id, t1p1, t1p2, t2p1, t2p2, winner, cups_left,
-        winner_ids, loser_ids, result, rows_by_id,
-    )
+    success = database.edit_game(game_id, t1p1, t1p2, t2p1, t2p2, winner, cups_left)
     if not success:
         flash("Game not found.", "error")
         return redirect(url_for("history"))

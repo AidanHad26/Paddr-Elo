@@ -3,6 +3,7 @@ import psycopg2
 import psycopg2.extras
 from contextlib import contextmanager
 from werkzeug.security import generate_password_hash
+import elo as elo_module
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 # Render uses postgres:// but psycopg2 requires postgresql://
@@ -346,9 +347,15 @@ def get_game_by_id(game_id):
             return cur.fetchone()
 
 
-def edit_game(game_id, t1p1, t1p2, t2p1, t2p2, winner, cups_left,
-              winner_ids, loser_ids, elo_result, rows_by_id):
+def edit_game(game_id, t1p1, t1p2, t2p1, t2p2, winner, cups_left):
     """Atomically revert old game and apply corrected game data."""
+    if winner == 1:
+        winner_ids = [t1p1, t1p2]
+        loser_ids  = [t2p1, t2p2]
+    else:
+        winner_ids = [t2p1, t2p2]
+        loser_ids  = [t1p1, t1p2]
+
     with get_db() as conn:
         with conn.cursor() as cur:
             # 1. Fetch original game
@@ -384,30 +391,41 @@ def edit_game(game_id, t1p1, t1p2, t2p1, t2p2, winner, cups_left,
             # 4. Delete old elo_history
             cur.execute("DELETE FROM elo_history WHERE game_id = %s", (game_id,))
 
-            # 5. Apply new Elo + wins/losses/lapped
+            # 5. Fetch post-reversal Elos for the 4 new players, then calculate
+            all_ids = list({t1p1, t1p2, t2p1, t2p2})
+            cur.execute("SELECT id, elo FROM players WHERE id = ANY(%s)", (all_ids,))
+            post_reversal = {r["id"]: r["elo"] for r in cur.fetchall()}
+
+            result = elo_module.calculate_elo_changes(
+                winner_elos=(post_reversal[winner_ids[0]], post_reversal[winner_ids[1]]),
+                loser_elos=(post_reversal[loser_ids[0]],  post_reversal[loser_ids[1]]),
+                cups_left=cups_left,
+            )
+
+            # 6. Apply new Elo + wins/losses/lapped
             lapped = cups_left >= 4.5
             for i, pid in enumerate(winner_ids):
                 cur.execute("UPDATE players SET elo = %s, wins = wins + 1 WHERE id = %s",
-                            (elo_result["winner_new_elos"][i], pid))
+                            (result["winner_new_elos"][i], pid))
                 cur.execute(
                     "INSERT INTO elo_history (game_id, player_id, elo_before, elo_after, delta) "
                     "VALUES (%s, %s, %s, %s, %s)",
-                    (game_id, pid, rows_by_id[pid]["elo"],
-                     elo_result["winner_new_elos"][i], elo_result["winner_deltas"][i]))
+                    (game_id, pid, post_reversal[pid],
+                     result["winner_new_elos"][i], result["winner_deltas"][i]))
             for i, pid in enumerate(loser_ids):
                 if lapped:
                     cur.execute("UPDATE players SET elo = %s, losses = losses + 1, lapped = lapped + 1 WHERE id = %s",
-                                (elo_result["loser_new_elos"][i], pid))
+                                (result["loser_new_elos"][i], pid))
                 else:
                     cur.execute("UPDATE players SET elo = %s, losses = losses + 1 WHERE id = %s",
-                                (elo_result["loser_new_elos"][i], pid))
+                                (result["loser_new_elos"][i], pid))
                 cur.execute(
                     "INSERT INTO elo_history (game_id, player_id, elo_before, elo_after, delta) "
                     "VALUES (%s, %s, %s, %s, %s)",
-                    (game_id, pid, rows_by_id[pid]["elo"],
-                     elo_result["loser_new_elos"][i], elo_result["loser_deltas"][i]))
+                    (game_id, pid, post_reversal[pid],
+                     result["loser_new_elos"][i], result["loser_deltas"][i]))
 
-            # 6. Update game record (preserve played_at)
+            # 7. Update game record (preserve played_at)
             cur.execute(
                 "UPDATE games SET team1_player1_id=%s, team1_player2_id=%s, "
                 "team2_player1_id=%s, team2_player2_id=%s, winning_team=%s, cups_left=%s "
