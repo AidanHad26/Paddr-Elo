@@ -168,7 +168,46 @@ def get_leaderboard():
             cur.execute(
                 "SELECT id, name, elo, wins, losses, lapped FROM players ORDER BY elo DESC"
             )
-            return cur.fetchall()
+            players = [dict(row) for row in cur.fetchall()]
+
+            cur.execute(
+                """
+                WITH player_results AS (
+                    SELECT team1_player1_id AS pid, played_at,
+                           CASE WHEN winning_team=1 THEN 'W' ELSE 'L' END AS res FROM games
+                    UNION ALL
+                    SELECT team1_player2_id, played_at,
+                           CASE WHEN winning_team=1 THEN 'W' ELSE 'L' END FROM games
+                    UNION ALL
+                    SELECT team2_player1_id, played_at,
+                           CASE WHEN winning_team=2 THEN 'W' ELSE 'L' END FROM games
+                    UNION ALL
+                    SELECT team2_player2_id, played_at,
+                           CASE WHEN winning_team=2 THEN 'W' ELSE 'L' END FROM games
+                )
+                SELECT pid, res FROM player_results ORDER BY pid, played_at DESC
+                """
+            )
+            from itertools import groupby
+            results_by_player = {}
+            for pid, rows in groupby(cur.fetchall(), key=lambda r: r["pid"]):
+                results_by_player[pid] = [r["res"] for r in rows]
+
+            for player in players:
+                results = results_by_player.get(player["id"], [])
+                if not results:
+                    player["streak"] = "—"
+                else:
+                    kind = results[0]
+                    count = 0
+                    for r in results:
+                        if r == kind:
+                            count += 1
+                        else:
+                            break
+                    player["streak"] = f"{kind}{count}"
+
+            return players
 
 
 def get_all_players():
