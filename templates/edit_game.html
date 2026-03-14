@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Edit Game — Paddr Elo{% endblock %}
+
+{% block content %}
+<h1>Edit Game</h1>
+
+<form method="POST" action="{{ url_for('edit_game', game_id=game.id) }}" data-game-form>
+
+  <div class="teams-grid">
+    <!-- Team 1 -->
+    <div class="team-card team-1">
+      <div class="team-label">Team 1</div>
+
+      <div class="form-group">
+        <label for="t1p1">Player 1</label>
+        <select id="t1p1" name="t1p1" data-player-select required>
+          <option value="">— Select player —</option>
+          {% for p in players %}
+          <option value="{{ p.id }}" {% if p.id == game.team1_player1_id %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="t1p2">Player 2</label>
+        <select id="t1p2" name="t1p2" data-player-select required>
+          <option value="">— Select player —</option>
+          {% for p in players %}
+          <option value="{{ p.id }}" {% if p.id == game.team1_player2_id %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Team 2 -->
+    <div class="team-card team-2">
+      <div class="team-label">Team 2</div>
+
+      <div class="form-group">
+        <label for="t2p1">Player 1</label>
+        <select id="t2p1" name="t2p1" data-player-select required>
+          <option value="">— Select player —</option>
+          {% for p in players %}
+          <option value="{{ p.id }}" {% if p.id == game.team2_player1_id %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="t2p2">Player 2</label>
+        <select id="t2p2" name="t2p2" data-player-select required>
+          <option value="">— Select player —</option>
+          {% for p in players %}
+          <option value="{{ p.id }}" {% if p.id == game.team2_player2_id %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-card">
+    <div style="display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start;">
+
+      <div class="form-group" style="flex: 1; min-width: 200px;">
+        <label>Winning Team</label>
+        <div class="radio-group">
+          <label class="radio-option {% if game.winning_team == 1 %}checked{% endif %}">
+            <input type="radio" name="winner" value="1" {% if game.winning_team == 1 %}checked{% endif %} required>
+            Team 1 Won
+          </label>
+          <label class="radio-option {% if game.winning_team == 2 %}checked{% endif %}">
+            <input type="radio" name="winner" value="2" {% if game.winning_team == 2 %}checked{% endif %}>
+            Team 2 Won
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" style="flex: 1; min-width: 180px;">
+        <label for="cups_left">Cups Left (losing team)</label>
+        <select id="cups_left" name="cups_left" required>
+          {% for val, label in [
+            ('5',   '5 — Lapped (no cups made)'),
+            ('4.5', '4.5'),
+            ('4',   '4 — Dominant win'),
+            ('3.5', '3.5'),
+            ('3',   '3 — Solid win'),
+            ('2.5', '2.5'),
+            ('2',   '2 — Close game'),
+            ('1.5', '1.5'),
+            ('1',   '1 — Very close'),
+            ('0.5', '0.5 — Last cup'),
+          ] %}
+          <option value="{{ val }}" {% if game.cups_left == val|float %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 6px;">
+          How many cups did the losing team still have when the winners finished?
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <button type="submit" class="btn btn-primary" style="font-size: 1rem; padding: 12px 28px;">
+      Save Changes
+    </button>
+    <a href="{{ url_for('history') }}" class="btn btn-secondary" style="font-size: 1rem; padding: 12px 28px;">
+      Cancel
+    </a>
+  </div>
+
+</form>
+{% endblock %}

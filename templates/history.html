@@ -70,11 +70,14 @@
       <span class="cups-badge">{{ game.cups_left }} cup{% if game.cups_left != 1 %}s{% endif %} left</span>
       <span class="game-date">{{ game.played_at or '' }}</span>
       {% if current_user.is_admin %}
-      <form method="POST" action="{{ url_for('delete_game', game_id=game.id) }}"
-            onsubmit="return confirm('Delete this game and reverse the Elo changes?')"
-            style="margin-top: 6px;">
-        <button type="submit" class="btn btn-danger" style="font-size: 0.75rem; padding: 3px 10px;">Delete</button>
-      </form>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+        <a href="{{ url_for('edit_game_page', game_id=game.id) }}" class="btn btn-secondary"
+           style="font-size: 0.75rem; padding: 3px 10px;">Edit</a>
+        <form method="POST" action="{{ url_for('delete_game', game_id=game.id) }}"
+              onsubmit="return confirm('Delete this game and reverse the Elo changes?')">
+          <button type="submit" class="btn btn-danger" style="font-size: 0.75rem; padding: 3px 10px;">Delete</button>
+        </form>
+      </div>
       {% endif %}
     </div>
 

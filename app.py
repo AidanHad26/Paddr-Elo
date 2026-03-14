@@ -236,6 +236,77 @@ def delete_player(player_id):
 # Admin: game management
 # ---------------------------------------------------------------------------
 
+@app.route("/admin/games/<int:game_id>/edit", methods=["GET"])
+@login_required
+@admin_required
+def edit_game_page(game_id):
+    game = database.get_game_by_id(game_id)
+    if not game:
+        flash("Game not found.", "error")
+        return redirect(url_for("history"))
+    players = database.get_all_players()
+    return render_template("edit_game.html", game=game, players=players)
+
+
+@app.route("/admin/games/<int:game_id>/edit", methods=["POST"])
+@login_required
+@admin_required
+def edit_game(game_id):
+    try:
+        t1p1 = int(request.form["t1p1"])
+        t1p2 = int(request.form["t1p2"])
+        t2p1 = int(request.form["t2p1"])
+        t2p2 = int(request.form["t2p2"])
+        winner = int(request.form["winner"])
+        cups_left = float(request.form["cups_left"])
+    except (KeyError, ValueError):
+        flash("Invalid form submission. Please fill out all fields.", "error")
+        return redirect(url_for("edit_game_page", game_id=game_id))
+
+    ids = [t1p1, t1p2, t2p1, t2p2]
+    if len(set(ids)) != 4:
+        flash("Each of the four player slots must have a different player.", "error")
+        return redirect(url_for("edit_game_page", game_id=game_id))
+
+    if winner not in (1, 2):
+        flash("Please select a winning team.", "error")
+        return redirect(url_for("edit_game_page", game_id=game_id))
+
+    valid_cups = {i / 2 for i in range(1, 11)}
+    if cups_left not in valid_cups:
+        flash("Cups left must be between 0.5 and 5 in 0.5 increments.", "error")
+        return redirect(url_for("edit_game_page", game_id=game_id))
+
+    rows_by_id = database.get_players_by_ids(ids)
+    if len(rows_by_id) != 4:
+        flash("One or more selected players were not found.", "error")
+        return redirect(url_for("edit_game_page", game_id=game_id))
+
+    if winner == 1:
+        winner_ids = [t1p1, t1p2]
+        loser_ids  = [t2p1, t2p2]
+    else:
+        winner_ids = [t2p1, t2p2]
+        loser_ids  = [t1p1, t1p2]
+
+    result = elo_module.calculate_elo_changes(
+        winner_elos=(rows_by_id[winner_ids[0]]["elo"], rows_by_id[winner_ids[1]]["elo"]),
+        loser_elos=(rows_by_id[loser_ids[0]]["elo"],  rows_by_id[loser_ids[1]]["elo"]),
+        cups_left=cups_left,
+    )
+
+    success = database.edit_game(
+        game_id, t1p1, t1p2, t2p1, t2p2, winner, cups_left,
+        winner_ids, loser_ids, result, rows_by_id,
+    )
+    if not success:
+        flash("Game not found.", "error")
+        return redirect(url_for("history"))
+
+    flash("Game updated.", "success")
+    return redirect(url_for("history"))
+
+
 @app.route("/admin/games/<int:game_id>/delete", methods=["POST"])
 @login_required
 @admin_required

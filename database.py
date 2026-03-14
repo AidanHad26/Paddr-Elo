@@ -335,6 +335,87 @@ def get_game_history():
             return cur.fetchall()
 
 
+def get_game_by_id(game_id):
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, team1_player1_id, team1_player2_id, team2_player1_id, "
+                "team2_player2_id, winning_team, cups_left FROM games WHERE id = %s",
+                (game_id,),
+            )
+            return cur.fetchone()
+
+
+def edit_game(game_id, t1p1, t1p2, t2p1, t2p2, winner, cups_left,
+              winner_ids, loser_ids, elo_result, rows_by_id):
+    """Atomically revert old game and apply corrected game data."""
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            # 1. Fetch original game
+            cur.execute(
+                "SELECT winning_team, cups_left, team1_player1_id, team1_player2_id, "
+                "team2_player1_id, team2_player2_id FROM games WHERE id = %s", (game_id,)
+            )
+            old = cur.fetchone()
+            if not old:
+                return False
+
+            # 2. Reverse old Elo deltas
+            cur.execute("SELECT player_id, delta FROM elo_history WHERE game_id = %s", (game_id,))
+            for row in cur.fetchall():
+                cur.execute("UPDATE players SET elo = elo - %s WHERE id = %s",
+                            (row["delta"], row["player_id"]))
+
+            # 3. Reverse old wins/losses/lapped
+            if old["winning_team"] == 1:
+                old_winners = [old["team1_player1_id"], old["team1_player2_id"]]
+                old_losers  = [old["team2_player1_id"], old["team2_player2_id"]]
+            else:
+                old_winners = [old["team2_player1_id"], old["team2_player2_id"]]
+                old_losers  = [old["team1_player1_id"], old["team1_player2_id"]]
+            for pid in old_winners:
+                cur.execute("UPDATE players SET wins = GREATEST(wins - 1, 0) WHERE id = %s", (pid,))
+            for pid in old_losers:
+                cur.execute("UPDATE players SET losses = GREATEST(losses - 1, 0) WHERE id = %s", (pid,))
+            if old["cups_left"] >= 4.5:
+                for pid in old_losers:
+                    cur.execute("UPDATE players SET lapped = GREATEST(lapped - 1, 0) WHERE id = %s", (pid,))
+
+            # 4. Delete old elo_history
+            cur.execute("DELETE FROM elo_history WHERE game_id = %s", (game_id,))
+
+            # 5. Apply new Elo + wins/losses/lapped
+            lapped = cups_left >= 4.5
+            for i, pid in enumerate(winner_ids):
+                cur.execute("UPDATE players SET elo = %s, wins = wins + 1 WHERE id = %s",
+                            (elo_result["winner_new_elos"][i], pid))
+                cur.execute(
+                    "INSERT INTO elo_history (game_id, player_id, elo_before, elo_after, delta) "
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    (game_id, pid, rows_by_id[pid]["elo"],
+                     elo_result["winner_new_elos"][i], elo_result["winner_deltas"][i]))
+            for i, pid in enumerate(loser_ids):
+                if lapped:
+                    cur.execute("UPDATE players SET elo = %s, losses = losses + 1, lapped = lapped + 1 WHERE id = %s",
+                                (elo_result["loser_new_elos"][i], pid))
+                else:
+                    cur.execute("UPDATE players SET elo = %s, losses = losses + 1 WHERE id = %s",
+                                (elo_result["loser_new_elos"][i], pid))
+                cur.execute(
+                    "INSERT INTO elo_history (game_id, player_id, elo_before, elo_after, delta) "
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    (game_id, pid, rows_by_id[pid]["elo"],
+                     elo_result["loser_new_elos"][i], elo_result["loser_deltas"][i]))
+
+            # 6. Update game record (preserve played_at)
+            cur.execute(
+                "UPDATE games SET team1_player1_id=%s, team1_player2_id=%s, "
+                "team2_player1_id=%s, team2_player2_id=%s, winning_team=%s, cups_left=%s "
+                "WHERE id = %s",
+                (t1p1, t1p2, t2p1, t2p2, winner, cups_left, game_id))
+    return True
+
+
 def delete_game(game_id):
     """Delete a game and revert its Elo changes."""
     with get_db() as conn:
