@@ -372,6 +372,17 @@ def api_players():
     ])
 
 
+@app.route("/api/players/<int:player_id>/elo-history")
+def api_player_elo_history(player_id):
+    rows = database.get_player_elo_history(player_id)
+    points = []
+    if rows:
+        points.append({"elo": rows[0]["elo_before"], "played_at": None})
+    for r in rows:
+        points.append({"elo": r["elo_after"], "played_at": r["played_at"].isoformat()})
+    return jsonify(points)
+
+
 # ---------------------------------------------------------------------------
 # Startup
 # ---------------------------------------------------------------------------

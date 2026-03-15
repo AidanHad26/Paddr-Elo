@@ -522,6 +522,85 @@ label {
   border-bottom: none;
 }
 
+/* ── Player Elo chart button ── */
+.player-elo-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: color 0.15s;
+}
+
+.player-elo-btn:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* ── Elo history modal ── */
+.elo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.elo-modal-overlay[hidden] {
+  display: none;
+}
+
+.elo-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.elo-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.elo-modal-header span {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+#elo-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+
+#elo-modal-close:hover {
+  color: var(--primary);
+}
+
+#elo-chart-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 0;
+}
+
 /* ── Player combo (typeahead) ── */
 .player-combo {
   position: relative;

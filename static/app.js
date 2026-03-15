@@ -102,10 +102,114 @@
     });
   }
 
+  // ── Elo history chart modal ─────────────────────────────────────────────
+  function initEloChart() {
+    const buttons = document.querySelectorAll("[data-player-id]");
+    if (!buttons.length) return;
+
+    const modal = document.getElementById("elo-modal");
+    const title = document.getElementById("elo-modal-title");
+    const closeBtn = document.getElementById("elo-modal-close");
+    const canvas = document.getElementById("elo-chart");
+    const emptyMsg = document.getElementById("elo-chart-empty");
+    let chartInstance = null;
+
+    function openModal(playerId, playerName) {
+      title.textContent = playerName + " — Elo History";
+      modal.hidden = false;
+
+      if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+      }
+      canvas.hidden = true;
+      emptyMsg.hidden = true;
+
+      fetch("/api/players/" + playerId + "/elo-history")
+        .then((r) => r.json())
+        .then((points) => {
+          if (points.length === 0) {
+            emptyMsg.hidden = false;
+            return;
+          }
+          canvas.hidden = false;
+          const labels = points.map((p, i) => (i === 0 ? "Start" : "Game " + i));
+          const data = points.map((p) => Math.round(p.elo * 10) / 10);
+
+          chartInstance = new Chart(canvas, {
+            type: "line",
+            data: {
+              labels,
+              datasets: [{
+                label: "Elo",
+                data,
+                borderColor: "#e94560",
+                backgroundColor: "rgba(233,69,96,0.08)",
+                pointBackgroundColor: "#e94560",
+                pointRadius: 4,
+                tension: 0.3,
+                fill: false,
+              }],
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) => " Elo: " + ctx.parsed.y.toFixed(1),
+                  },
+                },
+              },
+              scales: {
+                x: {
+                  ticks: { color: "#9090b0" },
+                  grid: { color: "#2e2e50" },
+                },
+                y: {
+                  ticks: { color: "#9090b0" },
+                  grid: { color: "#2e2e50" },
+                },
+              },
+            },
+          });
+        })
+        .catch(() => {
+          emptyMsg.textContent = "Failed to load data.";
+          emptyMsg.hidden = false;
+        });
+    }
+
+    function closeModal() {
+      modal.hidden = true;
+      if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+      }
+    }
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        openModal(btn.dataset.playerId, btn.dataset.playerName);
+      });
+    });
+
+    closeBtn.addEventListener("click", closeModal);
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !modal.hidden) closeModal();
+    });
+  }
+
   // ── Init ───────────────────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", () => {
     initPlayerCombos();
     attachGameFormValidation();
     attachRadioToggle();
+    initEloChart();
   });
 })();

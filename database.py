@@ -434,6 +434,19 @@ def edit_game(game_id, t1p1, t1p2, t2p1, t2p2, winner, cups_left):
     return True
 
 
+def get_player_elo_history(player_id):
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT eh.elo_before, eh.elo_after, g.played_at
+                FROM elo_history eh
+                JOIN games g ON eh.game_id = g.id
+                WHERE eh.player_id = %s
+                ORDER BY g.played_at ASC
+            """, (player_id,))
+            return cur.fetchall()
+
+
 def delete_game(game_id):
     """Delete a game and revert its Elo changes."""
     with get_db() as conn:

@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Leaderboard — Paddr Elo{% endblock %}
 
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <h1>Leaderboard</h1>
@@ -31,7 +35,9 @@
           {% elif loop.index == 3 %}🥉
           {% else %}{{ loop.index }}{% endif %}
         </td>
-        <td class="name-cell">{{ player.name }}</td>
+        <td class="name-cell">
+          <button class="player-elo-btn" data-player-id="{{ player.id }}" data-player-name="{{ player.name }}">{{ player.name }}</button>
+        </td>
         <td class="elo-cell">{{ "%.1f"|format(player.elo) }}</td>
         <td class="stat-cell win-stat">{{ player.wins }}</td>
         <td class="stat-cell loss-stat">{{ player.losses }}</td>
@@ -56,4 +62,17 @@
   <a href="{{ url_for('players') }}" class="btn btn-primary">Add Players</a>
 </div>
 {% endif %}
+
+<div id="elo-modal" class="elo-modal-overlay" hidden>
+  <div class="elo-modal">
+    <div class="elo-modal-header">
+      <span id="elo-modal-title"></span>
+      <button id="elo-modal-close">&times;</button>
+    </div>
+    <div id="elo-chart-container">
+      <canvas id="elo-chart"></canvas>
+      <p id="elo-chart-empty" hidden>No games recorded yet.</p>
+    </div>
+  </div>
+</div>
 {% endblock %}
