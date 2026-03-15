@@ -383,6 +383,29 @@ def api_player_elo_history(player_id):
     return jsonify(points)
 
 
+@app.route("/api/players/<int:player_id>/matchups")
+def api_player_matchups(player_id):
+    rows = database.get_player_matchup_stats(player_id)
+    h2h, partners = [], []
+    for r in rows:
+        losses = r["games"] - r["wins"]
+        win_pct = round(r["wins"] / r["games"] * 100, 1) if r["games"] else 0
+        entry = {"name": r["name"], "games": r["games"], "wins": r["wins"],
+                 "losses": losses, "win_pct": win_pct}
+        (h2h if r["kind"] == "h2h" else partners).append(entry)
+    return jsonify({"h2h": h2h, "partners": partners})
+
+
+@app.route("/api/stats")
+def api_stats():
+    return jsonify(database.get_site_stats())
+
+
+@app.route("/stats")
+def stats():
+    return render_template("stats.html")
+
+
 # ---------------------------------------------------------------------------
 # Startup
 # ---------------------------------------------------------------------------

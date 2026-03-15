@@ -102,8 +102,8 @@
     });
   }
 
-  // ── Elo history chart modal ─────────────────────────────────────────────
-  function initEloChart() {
+  // ── Player modal (Elo history + Matchups tabs) ─────────────────────────
+  function initPlayerModal() {
     const buttons = document.querySelectorAll("[data-player-id]");
     if (!buttons.length) return;
 
@@ -112,12 +112,71 @@
     const closeBtn = document.getElementById("elo-modal-close");
     const canvas = document.getElementById("elo-chart");
     const emptyMsg = document.getElementById("elo-chart-empty");
+    const tabElo = document.getElementById("tab-elo");
+    const tabMatchups = document.getElementById("tab-matchups");
+    const matchupLoading = document.getElementById("matchup-loading");
+    const matchupContent = document.getElementById("matchup-content");
+    const matchupError = document.getElementById("matchup-error");
+    const h2hTbody = document.getElementById("h2h-tbody");
+    const h2hEmpty = document.getElementById("h2h-empty");
+    const h2hTable = document.getElementById("h2h-table");
+    const partnerTbody = document.getElementById("partner-tbody");
+    const partnerEmpty = document.getElementById("partner-empty");
+    const partnerTable = document.getElementById("partner-table");
+    const tabBtns = document.querySelectorAll(".modal-tab");
+
     let chartInstance = null;
+    let currentPlayerId = null;
+    let matchupFetched = false;
 
-    function openModal(playerId, playerName) {
-      title.textContent = playerName + " — Elo History";
-      modal.hidden = false;
+    function activateTab(name) {
+      tabBtns.forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+      tabElo.hidden = name !== "elo";
+      tabMatchups.hidden = name !== "matchups";
+      if (name === "matchups" && !matchupFetched) {
+        loadMatchups(currentPlayerId);
+      }
+    }
 
+    function renderMatchupTable(rows, tbody, table, emptyEl) {
+      tbody.innerHTML = "";
+      if (!rows.length) {
+        table.hidden = true;
+        emptyEl.hidden = false;
+        return;
+      }
+      table.hidden = false;
+      emptyEl.hidden = true;
+      rows.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          `<td>${r.name}</td><td class="win-stat">${r.wins}</td>` +
+          `<td class="loss-stat">${r.losses}</td><td>${r.win_pct}%</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function loadMatchups(playerId) {
+      matchupFetched = true;
+      matchupLoading.hidden = false;
+      matchupContent.hidden = true;
+      matchupError.hidden = true;
+
+      fetch("/api/players/" + playerId + "/matchups")
+        .then((r) => r.json())
+        .then((data) => {
+          matchupLoading.hidden = true;
+          matchupContent.hidden = false;
+          renderMatchupTable(data.h2h, h2hTbody, h2hTable, h2hEmpty);
+          renderMatchupTable(data.partners, partnerTbody, partnerTable, partnerEmpty);
+        })
+        .catch(() => {
+          matchupLoading.hidden = true;
+          matchupError.hidden = false;
+        });
+    }
+
+    function loadEloChart(playerId) {
       if (chartInstance) {
         chartInstance.destroy();
         chartInstance = null;
@@ -180,6 +239,15 @@
         });
     }
 
+    function openModal(playerId, playerName) {
+      currentPlayerId = playerId;
+      matchupFetched = false;
+      title.textContent = playerName;
+      modal.hidden = false;
+      activateTab("elo");
+      loadEloChart(playerId);
+    }
+
     function closeModal() {
       modal.hidden = true;
       if (chartInstance) {
@@ -187,6 +255,10 @@
         chartInstance = null;
       }
     }
+
+    tabBtns.forEach((btn) => {
+      btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+    });
 
     buttons.forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -210,6 +282,6 @@
     initPlayerCombos();
     attachGameFormValidation();
     attachRadioToggle();
-    initEloChart();
+    initPlayerModal();
   });
 })();

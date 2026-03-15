@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Stats — Paddr Elo{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Stats &amp; Analytics</h1>
+</div>
+
+<div class="stats-cards">
+  <div class="stat-card">
+    <div class="stat-card-value" id="stat-total-games">—</div>
+    <div class="stat-card-label">Total Games</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-value" id="stat-total-players">—</div>
+    <div class="stat-card-label">Players</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-value" id="stat-upset-rate">—</div>
+    <div class="stat-card-label">Upset Rate</div>
+  </div>
+</div>
+
+<div class="stats-section">
+  <h2>Games per Week</h2>
+  <div class="chart-wrap">
+    <canvas id="activity-chart" height="120"></canvas>
+    <p id="activity-empty" hidden class="chart-empty">No game data yet.</p>
+  </div>
+</div>
+
+<div class="stats-section">
+  <h2>Cups Left Distribution</h2>
+  <div class="chart-wrap">
+    <canvas id="cups-chart" height="120"></canvas>
+    <p id="cups-empty" hidden class="chart-empty">No game data yet.</p>
+  </div>
+</div>
+
+<div class="stats-section">
+  <h2>Biggest Elo Swings</h2>
+  <div class="table-wrapper">
+    <table class="leaderboard-table" id="swings-table">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Change</th>
+          <th>Before → After</th>
+          <th>vs</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="swings-tbody"></tbody>
+    </table>
+    <p id="swings-empty" hidden class="chart-empty">No game data yet.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  const CHART_COLOR = "#e94560";
+  const CHART_BG = "rgba(233,69,96,0.15)";
+  const GRID = "#2e2e50";
+  const TICK = "#9090b0";
+
+  const chartDefaults = {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: TICK }, grid: { color: GRID } },
+      y: { ticks: { color: TICK }, grid: { color: GRID }, beginAtZero: true },
+    },
+  };
+
+  fetch("/api/stats")
+    .then((r) => r.json())
+    .then((data) => {
+      // Summary cards
+      document.getElementById("stat-total-games").textContent = data.summary.total_games;
+      document.getElementById("stat-total-players").textContent = data.summary.total_players;
+      document.getElementById("stat-upset-rate").textContent = data.summary.upset_rate + "%";
+
+      // Activity chart
+      if (data.activity.length) {
+        const labels = data.activity.map((r) => {
+          const d = new Date(r.week);
+          return (d.getMonth() + 1) + "/" + d.getDate();
+        });
+        new Chart(document.getElementById("activity-chart"), {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [{
+              label: "Games",
+              data: data.activity.map((r) => r.games),
+              backgroundColor: CHART_BG,
+              borderColor: CHART_COLOR,
+              borderWidth: 1,
+              borderRadius: 4,
+            }],
+          },
+          options: chartDefaults,
+        });
+      } else {
+        document.getElementById("activity-chart").hidden = true;
+        document.getElementById("activity-empty").hidden = false;
+      }
+
+      // Cups distribution chart
+      if (data.cups_dist.length) {
+        new Chart(document.getElementById("cups-chart"), {
+          type: "bar",
+          data: {
+            labels: data.cups_dist.map((r) => r.cups_left),
+            datasets: [{
+              label: "Games",
+              data: data.cups_dist.map((r) => r.games),
+              backgroundColor: CHART_BG,
+              borderColor: CHART_COLOR,
+              borderWidth: 1,
+              borderRadius: 4,
+            }],
+          },
+          options: {
+            ...chartDefaults,
+            scales: {
+              ...chartDefaults.scales,
+              x: { ...chartDefaults.scales.x, title: { display: true, text: "Cups Left", color: TICK } },
+            },
+          },
+        });
+      } else {
+        document.getElementById("cups-chart").hidden = true;
+        document.getElementById("cups-empty").hidden = false;
+      }
+
+      // Swings table
+      const tbody = document.getElementById("swings-tbody");
+      if (data.top_swings.length) {
+        data.top_swings.forEach((r) => {
+          const pos = r.delta >= 0;
+          const tr = document.createElement("tr");
+          tr.innerHTML =
+            `<td class="name-cell">${r.player_name}</td>` +
+            `<td class="${pos ? "delta-pos" : "delta-neg"}">${pos ? "+" : ""}${r.delta.toFixed(1)}</td>` +
+            `<td style="color:var(--text-muted);font-size:0.85rem">${Math.round(r.elo_before)} → ${Math.round(r.elo_after)}</td>` +
+            `<td style="font-size:0.85rem">${r.opponents || "—"}</td>` +
+            `<td class="game-date">${r.played_at}</td>`;
+          tbody.appendChild(tr);
+        });
+      } else {
+        document.getElementById("swings-table").hidden = true;
+        document.getElementById("swings-empty").hidden = false;
+      }
+    })
+    .catch((e) => console.error("Failed to load stats:", e));
+})();
+</script>
+{% endblock %}

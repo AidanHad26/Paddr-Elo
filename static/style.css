@@ -634,3 +634,119 @@ label {
   background: var(--bg);
   color: var(--primary);
 }
+
+/* ── Modal tabs ── */
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.modal-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 8px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius) var(--radius) 0 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.modal-tab:hover { color: var(--text); }
+.modal-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.matchup-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.matchup-table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.matchup-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.matchup-table tbody tr:last-child td { border-bottom: none; }
+.matchup-table tbody tr:hover { background: var(--surface2); }
+
+.matchup-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 20px 0;
+  font-size: 0.9rem;
+}
+
+.matchup-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+/* ── Stats page ── */
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 580px) {
+  .stats-cards { grid-template-columns: 1fr; }
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.stat-card-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+
+.stat-card-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+
+.stats-section { margin-bottom: 36px; }
+
+.chart-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.chart-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 0;
+}

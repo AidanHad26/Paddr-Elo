@@ -14,6 +14,7 @@
       <a href="{{ url_for('record_game_page') }}" {% if request.endpoint == 'record_game_page' %}class="active"{% endif %}>Record Game</a>
       <a href="{{ url_for('players') }}" {% if request.endpoint in ('players', 'add_player', 'edit_player', 'delete_player') %}class="active"{% endif %}>Players</a>
       <a href="{{ url_for('history') }}" {% if request.endpoint == 'history' %}class="active"{% endif %}>History</a>
+      <a href="{{ url_for('stats') }}" {% if request.endpoint == 'stats' %}class="active"{% endif %}>Stats</a>
       {% if current_user.is_authenticated and current_user.is_admin %}
         <a href="{{ url_for('admin_users') }}" {% if request.endpoint in ('admin_users', 'admin_add_user', 'admin_delete_user', 'admin_reset_password') %}class="active"{% endif %}>Users</a>
       {% endif %}

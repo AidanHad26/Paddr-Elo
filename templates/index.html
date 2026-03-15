@@ -69,9 +69,31 @@
       <span id="elo-modal-title"></span>
       <button id="elo-modal-close">&times;</button>
     </div>
-    <div id="elo-chart-container">
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-tab="elo">Elo History</button>
+      <button class="modal-tab" data-tab="matchups">Matchups</button>
+    </div>
+    <div id="tab-elo">
       <canvas id="elo-chart"></canvas>
       <p id="elo-chart-empty" hidden>No games recorded yet.</p>
+    </div>
+    <div id="tab-matchups" hidden>
+      <p id="matchup-loading" hidden>Loading...</p>
+      <div id="matchup-content" hidden>
+        <h3 class="matchup-section-title">Head-to-Head vs Opponents</h3>
+        <table class="matchup-table" id="h2h-table">
+          <thead><tr><th>Opponent</th><th>W</th><th>L</th><th>Win%</th></tr></thead>
+          <tbody id="h2h-tbody"></tbody>
+        </table>
+        <p id="h2h-empty" hidden class="matchup-empty">No opponents yet.</p>
+        <h3 class="matchup-section-title" style="margin-top:20px">Win Rate with Partners</h3>
+        <table class="matchup-table" id="partner-table">
+          <thead><tr><th>Partner</th><th>W</th><th>L</th><th>Win%</th></tr></thead>
+          <tbody id="partner-tbody"></tbody>
+        </table>
+        <p id="partner-empty" hidden class="matchup-empty">No partners yet.</p>
+      </div>
+      <p id="matchup-error" hidden class="matchup-empty">Failed to load matchup data.</p>
     </div>
   </div>
 </div>

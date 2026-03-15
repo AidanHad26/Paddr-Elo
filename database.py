@@ -447,6 +447,140 @@ def get_player_elo_history(player_id):
             return cur.fetchall()
 
 
+def get_player_matchup_stats(player_id):
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                WITH focal_games AS (
+                    SELECT g.id AS game_id, g.winning_team,
+                        CASE WHEN g.team1_player1_id = %(pid)s OR g.team1_player2_id = %(pid)s
+                             THEN 1 ELSE 2 END AS focal_team
+                    FROM games g
+                    WHERE %(pid)s IN (g.team1_player1_id, g.team1_player2_id,
+                                      g.team2_player1_id, g.team2_player2_id)
+                ),
+                h2h_rows AS (
+                    SELECT fg.winning_team = fg.focal_team AS focal_won,
+                        unnest(CASE WHEN fg.focal_team = 1
+                            THEN ARRAY[g.team2_player1_id, g.team2_player2_id]
+                            ELSE ARRAY[g.team1_player1_id, g.team1_player2_id] END) AS opp_id
+                    FROM focal_games fg JOIN games g ON g.id = fg.game_id
+                ),
+                partner_rows AS (
+                    SELECT fg.winning_team = fg.focal_team AS focal_won,
+                        unnest(CASE WHEN fg.focal_team = 1
+                            THEN ARRAY[CASE WHEN g.team1_player1_id = %(pid)s
+                                            THEN g.team1_player2_id
+                                            ELSE g.team1_player1_id END]
+                            ELSE ARRAY[CASE WHEN g.team2_player1_id = %(pid)s
+                                            THEN g.team2_player2_id
+                                            ELSE g.team2_player1_id END] END) AS partner_id
+                    FROM focal_games fg JOIN games g ON g.id = fg.game_id
+                )
+                SELECT 'h2h' AS kind, p.name, COUNT(*) AS games,
+                    SUM(CASE WHEN hr.focal_won THEN 1 ELSE 0 END) AS wins
+                FROM h2h_rows hr JOIN players p ON p.id = hr.opp_id GROUP BY p.name
+                UNION ALL
+                SELECT 'partner' AS kind, p.name, COUNT(*) AS games,
+                    SUM(CASE WHEN pr.focal_won THEN 1 ELSE 0 END) AS wins
+                FROM partner_rows pr JOIN players p ON p.id = pr.partner_id GROUP BY p.name
+                ORDER BY kind, games DESC, wins DESC
+            """, {"pid": player_id})
+            return cur.fetchall()
+
+
+def get_site_stats():
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            # Summary: total games, players, upset rate
+            cur.execute("""
+                WITH team_avg AS (
+                    SELECT g.id AS game_id, g.winning_team,
+                        AVG(CASE WHEN eh.player_id IN (g.team1_player1_id, g.team1_player2_id)
+                                 THEN eh.elo_before END) AS t1_avg,
+                        AVG(CASE WHEN eh.player_id IN (g.team2_player1_id, g.team2_player2_id)
+                                 THEN eh.elo_before END) AS t2_avg
+                    FROM games g
+                    JOIN elo_history eh ON eh.game_id = g.id
+                    GROUP BY g.id, g.winning_team
+                )
+                SELECT
+                    (SELECT COUNT(*) FROM games) AS total_games,
+                    (SELECT COUNT(*) FROM players) AS total_players,
+                    COUNT(*) AS games_with_history,
+                    SUM(CASE WHEN (winning_team = 1 AND t1_avg < t2_avg)
+                                  OR (winning_team = 2 AND t2_avg < t1_avg)
+                             THEN 1 ELSE 0 END) AS upsets
+                FROM team_avg
+            """)
+            summary_row = cur.fetchone()
+            total_games = summary_row["total_games"] or 0
+            total_players = summary_row["total_players"] or 0
+            games_with_history = summary_row["games_with_history"] or 0
+            upsets = summary_row["upsets"] or 0
+            upset_rate = round(upsets / games_with_history * 100, 1) if games_with_history else 0
+
+            # Activity: games per week, last 16 weeks
+            cur.execute("""
+                SELECT DATE_TRUNC('week', played_at) AS week, COUNT(*) AS games
+                FROM games
+                WHERE played_at >= NOW() - INTERVAL '16 weeks'
+                GROUP BY week
+                ORDER BY week ASC
+            """)
+            activity = [
+                {"week": r["week"].isoformat(), "games": r["games"]}
+                for r in cur.fetchall()
+            ]
+
+            # Cups distribution
+            cur.execute("""
+                SELECT cups_left, COUNT(*) AS games
+                FROM games
+                GROUP BY cups_left
+                ORDER BY cups_left
+            """)
+            cups_dist = [
+                {"cups_left": r["cups_left"], "games": r["games"]}
+                for r in cur.fetchall()
+            ]
+
+            # Top 10 biggest Elo swings
+            cur.execute("""
+                SELECT
+                    eh.delta,
+                    eh.elo_before,
+                    eh.elo_after,
+                    p.name AS player_name,
+                    TO_CHAR(g.played_at, 'YYYY-MM-DD') AS played_at,
+                    CASE WHEN eh.player_id IN (g.team1_player1_id, g.team1_player2_id)
+                         THEN (SELECT STRING_AGG(op.name, ' & ' ORDER BY op.name)
+                               FROM players op
+                               WHERE op.id IN (g.team2_player1_id, g.team2_player2_id))
+                         ELSE (SELECT STRING_AGG(op.name, ' & ' ORDER BY op.name)
+                               FROM players op
+                               WHERE op.id IN (g.team1_player1_id, g.team1_player2_id))
+                    END AS opponents
+                FROM elo_history eh
+                JOIN games g ON g.id = eh.game_id
+                JOIN players p ON p.id = eh.player_id
+                ORDER BY ABS(eh.delta) DESC
+                LIMIT 10
+            """)
+            top_swings = [dict(r) for r in cur.fetchall()]
+
+    return {
+        "summary": {
+            "total_games": total_games,
+            "total_players": total_players,
+            "upset_rate": upset_rate,
+        },
+        "activity": activity,
+        "cups_dist": cups_dist,
+        "top_swings": top_swings,
+    }
+
+
 def delete_game(game_id):
     """Delete a game and revert its Elo changes."""
     with get_db() as conn:
