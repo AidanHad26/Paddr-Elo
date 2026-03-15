@@ -165,7 +165,8 @@ def record_game():
 @app.route("/history")
 def history():
     games = database.get_game_history()
-    return render_template("history.html", games=games)
+    players = database.get_all_players()
+    return render_template("history.html", games=games, players=players)
 
 
 # ---------------------------------------------------------------------------

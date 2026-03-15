@@ -3,10 +3,10 @@
 (function () {
   "use strict";
 
-  // ── Populate player dropdowns on the Record Game page ──────────────────
-  async function loadPlayerDropdowns() {
-    const selects = document.querySelectorAll("select[data-player-select]");
-    if (!selects.length) return;
+  // ── Player typeahead combos on the Record Game page ────────────────────
+  async function initPlayerCombos() {
+    const combos = document.querySelectorAll("[data-player-combo]");
+    if (!combos.length) return;
 
     let players;
     try {
@@ -17,19 +17,48 @@
       return;
     }
 
-    selects.forEach((sel) => {
-      const currentVal = sel.value;
-      // keep the placeholder option
-      while (sel.options.length > 1) sel.remove(1);
+    combos.forEach((combo) => {
+      const textInput = combo.querySelector(".player-search-input");
+      const hiddenInput = combo.querySelector('input[type="hidden"]');
+      const list = combo.querySelector(".player-dropdown");
 
-      players.forEach((p) => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = `${p.name}  (${p.elo.toFixed(1)})`;
-        sel.appendChild(opt);
+      function renderList(filtered) {
+        list.innerHTML = "";
+        filtered.forEach((p) => {
+          const li = document.createElement("li");
+          li.textContent = `${p.name}  (${p.elo.toFixed(1)})`;
+          li.dataset.id = p.id;
+          li.dataset.name = p.name;
+          li.addEventListener("mousedown", (e) => {
+            e.preventDefault(); // keep focus on textInput
+            hiddenInput.value = p.id;
+            textInput.value = p.name;
+            list.hidden = true;
+          });
+          list.appendChild(li);
+        });
+        list.hidden = filtered.length === 0;
+      }
+
+      textInput.addEventListener("input", () => {
+        hiddenInput.value = ""; // clear selection when typing
+        const q = textInput.value.toLowerCase();
+        renderList(q ? players.filter((p) => p.name.toLowerCase().includes(q)) : players);
       });
 
-      if (currentVal) sel.value = currentVal;
+      textInput.addEventListener("focus", () => {
+        const q = textInput.value.toLowerCase();
+        renderList(q ? players.filter((p) => p.name.toLowerCase().includes(q)) : players);
+      });
+
+      textInput.addEventListener("blur", () => {
+        // Small delay so mousedown on list item fires first
+        setTimeout(() => {
+          list.hidden = true;
+          // If text doesn't match a confirmed selection, clear both
+          if (!hiddenInput.value) textInput.value = "";
+        }, 150);
+      });
     });
   }
 
@@ -75,7 +104,7 @@
 
   // ── Init ───────────────────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", () => {
-    loadPlayerDropdowns();
+    initPlayerCombos();
     attachGameFormValidation();
     attachRadioToggle();
   });

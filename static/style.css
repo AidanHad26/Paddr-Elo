@@ -521,3 +521,37 @@ label {
 .players-table tbody tr:last-child td {
   border-bottom: none;
 }
+
+/* ── Player combo (typeahead) ── */
+.player-combo {
+  position: relative;
+}
+
+.player-dropdown {
+  position: absolute;
+  z-index: 100;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-top: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+  list-style: none;
+  padding: 4px 0;
+  margin: 2px 0 0;
+}
+
+.player-dropdown li {
+  padding: 8px 13px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.player-dropdown li:hover {
+  background: var(--bg);
+  color: var(--primary);
+}

@@ -8,12 +8,20 @@
 </div>
 
 {% if games %}
+<div class="filter-bar">
+  <select id="player-filter">
+    <option value="">All Players</option>
+    {% for p in players %}
+    <option value="{{ p.name }}">{{ p.name }}</option>
+    {% endfor %}
+  </select>
+</div>
 <div class="history-list">
   {% for game in games %}
   {% set t1_won = game.winning_team == 1 %}
   {% set t2_won = game.winning_team == 2 %}
 
-  <div class="game-card">
+  <div class="game-card" data-players="{{ game.t1p1_name }},{{ game.t1p2_name }},{{ game.t2p1_name }},{{ game.t2p2_name }}">
 
     <!-- Team 1 -->
     <div class="game-team">
@@ -84,6 +92,16 @@
   </div>
   {% endfor %}
 </div>
+
+<script>
+document.getElementById('player-filter').addEventListener('change', function() {
+  const selected = this.value;
+  document.querySelectorAll('.game-card').forEach(card => {
+    const players = card.dataset.players.split(',');
+    card.style.display = (!selected || players.includes(selected)) ? '' : 'none';
+  });
+});
+</script>
 {% else %}
 <div class="empty-state">
   <p>No games recorded yet.</p>
