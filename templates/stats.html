@@ -26,6 +26,22 @@
 </div>
 
 <div class="stats-section">
+  <h2>Duos</h2>
+  <div class="stats-cards">
+    <div class="stat-card">
+      <div class="stat-card-value" id="best-duo-names">—</div>
+      <div class="stat-card-label" id="best-duo-pct" style="font-size:1.1rem;color:var(--win)">—</div>
+      <div class="stat-card-label">Best Duo Win %</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-value" id="worst-duo-names">—</div>
+      <div class="stat-card-label" id="worst-duo-pct" style="font-size:1.1rem;color:var(--loss)">—</div>
+      <div class="stat-card-label">Worst Duo Win %</div>
+    </div>
+  </div>
+</div>
+
+<div class="stats-section">
   <h2>Streaks</h2>
   <div class="stats-cards">
     <div class="stat-card">
@@ -52,10 +68,20 @@
 </div>
 
 <div class="stats-section">
-  <h2>Games per Week</h2>
-  <div class="chart-wrap">
-    <canvas id="activity-chart" height="120"></canvas>
-    <p id="activity-empty" hidden class="chart-empty">No game data yet.</p>
+  <h2>Fraud Watch</h2>
+  <p style="color:var(--text-muted);font-size:0.9rem;margin-top:-0.5rem;margin-bottom:1rem">Players with the lowest average opponent Elo — suspiciously easy schedules.</p>
+  <div class="table-wrapper">
+    <table class="leaderboard-table" id="fraud-table">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Avg Opp Elo</th>
+          <th>Games</th>
+        </tr>
+      </thead>
+      <tbody id="fraud-tbody"></tbody>
+    </table>
+    <p id="fraud-empty" hidden class="chart-empty">No game data yet.</p>
   </div>
 </div>
 
@@ -64,6 +90,14 @@
   <div class="chart-wrap">
     <canvas id="cups-chart" height="120"></canvas>
     <p id="cups-empty" hidden class="chart-empty">No game data yet.</p>
+  </div>
+</div>
+
+<div class="stats-section">
+  <h2>Games per Week</h2>
+  <div class="chart-wrap">
+    <canvas id="activity-chart" height="120"></canvas>
+    <p id="activity-empty" hidden class="chart-empty">No game data yet.</p>
   </div>
 </div>
 
@@ -83,24 +117,6 @@
       <tbody id="swings-tbody"></tbody>
     </table>
     <p id="swings-empty" hidden class="chart-empty">No game data yet.</p>
-  </div>
-</div>
-
-<div class="stats-section">
-  <h2>Fraud Watch</h2>
-  <p style="color:var(--text-muted);font-size:0.9rem;margin-top:-0.5rem;margin-bottom:1rem">Players with the lowest average opponent Elo — suspiciously easy schedules.</p>
-  <div class="table-wrapper">
-    <table class="leaderboard-table" id="fraud-table">
-      <thead>
-        <tr>
-          <th>Player</th>
-          <th>Avg Opp Elo</th>
-          <th>Games</th>
-        </tr>
-      </thead>
-      <tbody id="fraud-tbody"></tbody>
-    </table>
-    <p id="fraud-empty" hidden class="chart-empty">No game data yet.</p>
   </div>
 </div>
 
@@ -180,6 +196,19 @@
       } else {
         document.getElementById("cups-chart").hidden = true;
         document.getElementById("cups-empty").hidden = false;
+      }
+
+      // Best duo
+      if (data.best_duo) {
+        const d = data.best_duo;
+        document.getElementById("best-duo-names").textContent = d.player1_name + " & " + d.player2_name;
+        document.getElementById("best-duo-pct").textContent = d.win_pct + "%";
+      }
+      // Worst duo
+      if (data.worst_duo) {
+        const d = data.worst_duo;
+        document.getElementById("worst-duo-names").textContent = d.player1_name + " & " + d.player2_name;
+        document.getElementById("worst-duo-pct").textContent = d.win_pct + "%";
       }
 
       // Win streaks

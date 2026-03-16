@@ -572,19 +572,19 @@ def get_site_stats():
             # Win streaks: fetch all results per player ordered chronologically
             cur.execute("""
                 SELECT pid, res FROM (
-                    SELECT team1_player1_id AS pid, played_at,
+                    SELECT team1_player1_id AS pid, played_at, id AS game_id,
                            CASE WHEN winning_team=1 THEN 'W' ELSE 'L' END AS res FROM games
                     UNION ALL
-                    SELECT team1_player2_id, played_at,
+                    SELECT team1_player2_id, played_at, id,
                            CASE WHEN winning_team=1 THEN 'W' ELSE 'L' END FROM games
                     UNION ALL
-                    SELECT team2_player1_id, played_at,
+                    SELECT team2_player1_id, played_at, id,
                            CASE WHEN winning_team=2 THEN 'W' ELSE 'L' END FROM games
                     UNION ALL
-                    SELECT team2_player2_id, played_at,
+                    SELECT team2_player2_id, played_at, id,
                            CASE WHEN winning_team=2 THEN 'W' ELSE 'L' END FROM games
                 ) t
-                ORDER BY pid, played_at ASC
+                ORDER BY pid, played_at ASC, game_id ASC
             """)
             from itertools import groupby as _groupby
             results_by_player = {}
@@ -682,6 +682,70 @@ def get_site_stats():
             """)
             fraud_watch = [dict(r) for r in cur.fetchall()]
 
+            # Best duo: teammate pair with highest win percentage (min 3 games together)
+            cur.execute("""
+                WITH duo_games AS (
+                    SELECT
+                        LEAST(team1_player1_id, team1_player2_id) AS p1,
+                        GREATEST(team1_player1_id, team1_player2_id) AS p2,
+                        CASE WHEN winning_team = 1 THEN 1 ELSE 0 END AS won
+                    FROM games
+                    UNION ALL
+                    SELECT
+                        LEAST(team2_player1_id, team2_player2_id),
+                        GREATEST(team2_player1_id, team2_player2_id),
+                        CASE WHEN winning_team = 2 THEN 1 ELSE 0 END
+                    FROM games
+                )
+                SELECT
+                    p1.name AS player1_name,
+                    p2.name AS player2_name,
+                    COUNT(*) AS games,
+                    SUM(won) AS wins,
+                    ROUND(SUM(won)::numeric / COUNT(*) * 100, 1) AS win_pct
+                FROM duo_games
+                JOIN players p1 ON p1.id = duo_games.p1
+                JOIN players p2 ON p2.id = duo_games.p2
+                GROUP BY duo_games.p1, duo_games.p2, p1.name, p2.name
+                HAVING COUNT(*) >= 3
+                ORDER BY win_pct DESC, games DESC
+                LIMIT 1
+            """)
+            best_duo_row = cur.fetchone()
+            best_duo = dict(best_duo_row) if best_duo_row else None
+
+            # Worst duo: teammate pair with lowest win percentage (min 3 games together)
+            cur.execute("""
+                WITH duo_games AS (
+                    SELECT
+                        LEAST(team1_player1_id, team1_player2_id) AS p1,
+                        GREATEST(team1_player1_id, team1_player2_id) AS p2,
+                        CASE WHEN winning_team = 1 THEN 1 ELSE 0 END AS won
+                    FROM games
+                    UNION ALL
+                    SELECT
+                        LEAST(team2_player1_id, team2_player2_id),
+                        GREATEST(team2_player1_id, team2_player2_id),
+                        CASE WHEN winning_team = 2 THEN 1 ELSE 0 END
+                    FROM games
+                )
+                SELECT
+                    p1.name AS player1_name,
+                    p2.name AS player2_name,
+                    COUNT(*) AS games,
+                    SUM(won) AS wins,
+                    ROUND(SUM(won)::numeric / COUNT(*) * 100, 1) AS win_pct
+                FROM duo_games
+                JOIN players p1 ON p1.id = duo_games.p1
+                JOIN players p2 ON p2.id = duo_games.p2
+                GROUP BY duo_games.p1, duo_games.p2, p1.name, p2.name
+                HAVING COUNT(*) >= 3
+                ORDER BY win_pct ASC, games DESC
+                LIMIT 1
+            """)
+            worst_duo_row = cur.fetchone()
+            worst_duo = dict(worst_duo_row) if worst_duo_row else None
+
     return {
         "summary": {
             "total_games": total_games,
@@ -696,6 +760,8 @@ def get_site_stats():
         "current_loss_streak": current_loss_streak_best,
         "alltime_loss_streak": alltime_loss_streak_best,
         "fraud_watch": fraud_watch,
+        "best_duo": best_duo,
+        "worst_duo": worst_duo,
     }
 
 
