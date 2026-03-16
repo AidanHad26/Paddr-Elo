@@ -26,6 +26,32 @@
 </div>
 
 <div class="stats-section">
+  <h2>Streaks</h2>
+  <div class="stats-cards">
+    <div class="stat-card">
+      <div class="stat-card-value" id="streak-current-name">—</div>
+      <div class="stat-card-label" id="streak-current-count" style="font-size:1.1rem;color:var(--win)">—</div>
+      <div class="stat-card-label">Current Longest Win Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-value" id="streak-alltime-name">—</div>
+      <div class="stat-card-label" id="streak-alltime-count" style="font-size:1.1rem;color:var(--win)">—</div>
+      <div class="stat-card-label">All-Time Longest Win Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-value" id="streak-loss-current-name">—</div>
+      <div class="stat-card-label" id="streak-loss-current-count" style="font-size:1.1rem;color:var(--loss)">—</div>
+      <div class="stat-card-label">Current Longest Losing Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-value" id="streak-loss-alltime-name">—</div>
+      <div class="stat-card-label" id="streak-loss-alltime-count" style="font-size:1.1rem;color:var(--loss)">—</div>
+      <div class="stat-card-label">All-Time Longest Losing Streak</div>
+    </div>
+  </div>
+</div>
+
+<div class="stats-section">
   <h2>Games per Week</h2>
   <div class="chart-wrap">
     <canvas id="activity-chart" height="120"></canvas>
@@ -57,6 +83,24 @@
       <tbody id="swings-tbody"></tbody>
     </table>
     <p id="swings-empty" hidden class="chart-empty">No game data yet.</p>
+  </div>
+</div>
+
+<div class="stats-section">
+  <h2>Fraud Watch</h2>
+  <p style="color:var(--text-muted);font-size:0.9rem;margin-top:-0.5rem;margin-bottom:1rem">Players with the lowest average opponent Elo — suspiciously easy schedules.</p>
+  <div class="table-wrapper">
+    <table class="leaderboard-table" id="fraud-table">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Avg Opp Elo</th>
+          <th>Games</th>
+        </tr>
+      </thead>
+      <tbody id="fraud-tbody"></tbody>
+    </table>
+    <p id="fraud-empty" hidden class="chart-empty">No game data yet.</p>
   </div>
 </div>
 
@@ -138,6 +182,24 @@
         document.getElementById("cups-empty").hidden = false;
       }
 
+      // Win streaks
+      if (data.current_streak && data.current_streak.streak > 0) {
+        document.getElementById("streak-current-name").textContent = data.current_streak.name;
+        document.getElementById("streak-current-count").textContent = "W" + data.current_streak.streak;
+      }
+      if (data.alltime_streak && data.alltime_streak.streak > 0) {
+        document.getElementById("streak-alltime-name").textContent = data.alltime_streak.name;
+        document.getElementById("streak-alltime-count").textContent = "W" + data.alltime_streak.streak;
+      }
+      if (data.current_loss_streak && data.current_loss_streak.streak > 0) {
+        document.getElementById("streak-loss-current-name").textContent = data.current_loss_streak.name;
+        document.getElementById("streak-loss-current-count").textContent = "L" + data.current_loss_streak.streak;
+      }
+      if (data.alltime_loss_streak && data.alltime_loss_streak.streak > 0) {
+        document.getElementById("streak-loss-alltime-name").textContent = data.alltime_loss_streak.name;
+        document.getElementById("streak-loss-alltime-count").textContent = "L" + data.alltime_loss_streak.streak;
+      }
+
       // Swings table
       const tbody = document.getElementById("swings-tbody");
       if (data.top_swings.length) {
@@ -155,6 +217,21 @@
       } else {
         document.getElementById("swings-table").hidden = true;
         document.getElementById("swings-empty").hidden = false;
+      }
+      // Fraud watch table
+      const fraudTbody = document.getElementById("fraud-tbody");
+      if (data.fraud_watch && data.fraud_watch.length) {
+        data.fraud_watch.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML =
+            `<td class="name-cell">${r.name}</td>` +
+            `<td>${Math.round(r.avg_opp_elo)}</td>` +
+            `<td style="color:var(--text-muted)">${r.games}</td>`;
+          fraudTbody.appendChild(tr);
+        });
+      } else {
+        document.getElementById("fraud-table").hidden = true;
+        document.getElementById("fraud-empty").hidden = false;
       }
     })
     .catch((e) => console.error("Failed to load stats:", e));

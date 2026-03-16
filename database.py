@@ -569,6 +569,119 @@ def get_site_stats():
             """)
             top_swings = [dict(r) for r in cur.fetchall()]
 
+            # Win streaks: fetch all results per player ordered chronologically
+            cur.execute("""
+                SELECT pid, res FROM (
+                    SELECT team1_player1_id AS pid, played_at,
+                           CASE WHEN winning_team=1 THEN 'W' ELSE 'L' END AS res FROM games
+                    UNION ALL
+                    SELECT team1_player2_id, played_at,
+                           CASE WHEN winning_team=1 THEN 'W' ELSE 'L' END FROM games
+                    UNION ALL
+                    SELECT team2_player1_id, played_at,
+                           CASE WHEN winning_team=2 THEN 'W' ELSE 'L' END FROM games
+                    UNION ALL
+                    SELECT team2_player2_id, played_at,
+                           CASE WHEN winning_team=2 THEN 'W' ELSE 'L' END FROM games
+                ) t
+                ORDER BY pid, played_at ASC
+            """)
+            from itertools import groupby as _groupby
+            results_by_player = {}
+            for pid, rows in _groupby(cur.fetchall(), key=lambda r: r["pid"]):
+                results_by_player[pid] = [r["res"] for r in rows]
+
+            cur.execute("SELECT id, name FROM players")
+            player_names = {r["id"]: r["name"] for r in cur.fetchall()}
+
+            current_streak_best = {"name": None, "streak": 0}
+            alltime_streak_best = {"name": None, "streak": 0}
+            current_loss_streak_best = {"name": None, "streak": 0}
+            alltime_loss_streak_best = {"name": None, "streak": 0}
+
+            for pid, results in results_by_player.items():
+                # Current active win streak (from most recent game backwards)
+                current = 0
+                for r in reversed(results):
+                    if r == "W":
+                        current += 1
+                    else:
+                        break
+
+                # All-time longest win streak
+                max_run = run = 0
+                for r in results:
+                    if r == "W":
+                        run += 1
+                        if run > max_run:
+                            max_run = run
+                    else:
+                        run = 0
+
+                # Current active losing streak (from most recent game backwards)
+                current_loss = 0
+                for r in reversed(results):
+                    if r == "L":
+                        current_loss += 1
+                    else:
+                        break
+
+                # All-time longest losing streak
+                max_loss_run = loss_run = 0
+                for r in results:
+                    if r == "L":
+                        loss_run += 1
+                        if loss_run > max_loss_run:
+                            max_loss_run = loss_run
+                    else:
+                        loss_run = 0
+
+                name = player_names.get(pid, "Unknown")
+                if current > current_streak_best["streak"]:
+                    current_streak_best = {"name": name, "streak": current}
+                if max_run > alltime_streak_best["streak"]:
+                    alltime_streak_best = {"name": name, "streak": max_run}
+                if current_loss > current_loss_streak_best["streak"]:
+                    current_loss_streak_best = {"name": name, "streak": current_loss}
+                if max_loss_run > alltime_loss_streak_best["streak"]:
+                    alltime_loss_streak_best = {"name": name, "streak": max_loss_run}
+
+            # Fraud watch: top 3 players with lowest average opponent Elo
+            cur.execute("""
+                WITH opp_elo AS (
+                    SELECT g.team1_player1_id AS pid,
+                           (eh2.elo_before + eh3.elo_before) / 2.0 AS opp_avg
+                    FROM games g
+                    JOIN elo_history eh2 ON eh2.game_id = g.id AND eh2.player_id = g.team2_player1_id
+                    JOIN elo_history eh3 ON eh3.game_id = g.id AND eh3.player_id = g.team2_player2_id
+                    UNION ALL
+                    SELECT g.team1_player2_id,
+                           (eh2.elo_before + eh3.elo_before) / 2.0
+                    FROM games g
+                    JOIN elo_history eh2 ON eh2.game_id = g.id AND eh2.player_id = g.team2_player1_id
+                    JOIN elo_history eh3 ON eh3.game_id = g.id AND eh3.player_id = g.team2_player2_id
+                    UNION ALL
+                    SELECT g.team2_player1_id,
+                           (eh1.elo_before + eh2.elo_before) / 2.0
+                    FROM games g
+                    JOIN elo_history eh1 ON eh1.game_id = g.id AND eh1.player_id = g.team1_player1_id
+                    JOIN elo_history eh2 ON eh2.game_id = g.id AND eh2.player_id = g.team1_player2_id
+                    UNION ALL
+                    SELECT g.team2_player2_id,
+                           (eh1.elo_before + eh2.elo_before) / 2.0
+                    FROM games g
+                    JOIN elo_history eh1 ON eh1.game_id = g.id AND eh1.player_id = g.team1_player1_id
+                    JOIN elo_history eh2 ON eh2.game_id = g.id AND eh2.player_id = g.team1_player2_id
+                )
+                SELECT p.name, ROUND(AVG(opp_avg)::numeric, 1) AS avg_opp_elo, COUNT(*) AS games
+                FROM opp_elo
+                JOIN players p ON p.id = opp_elo.pid
+                GROUP BY p.id, p.name
+                ORDER BY avg_opp_elo ASC
+                LIMIT 3
+            """)
+            fraud_watch = [dict(r) for r in cur.fetchall()]
+
     return {
         "summary": {
             "total_games": total_games,
@@ -578,6 +691,11 @@ def get_site_stats():
         "activity": activity,
         "cups_dist": cups_dist,
         "top_swings": top_swings,
+        "current_streak": current_streak_best,
+        "alltime_streak": alltime_streak_best,
+        "current_loss_streak": current_loss_streak_best,
+        "alltime_loss_streak": alltime_loss_streak_best,
+        "fraud_watch": fraud_watch,
     }
 
 
