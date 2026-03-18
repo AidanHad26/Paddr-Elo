@@ -750,3 +750,50 @@ label {
   color: var(--text-muted);
   padding: 40px 0;
 }
+
+/* === ELO BOOST EVENT === */
+.boost-banner {
+  background: linear-gradient(135deg, #f5a623, #f7c948, #f5a623);
+  background-size: 200% 200%;
+  animation: boostPulse 3s ease infinite;
+  color: #1a1a2e;
+  text-align: center;
+  padding: 10px 20px;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  letter-spacing: 0.05em;
+}
+
+.boost-title {
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.boost-badge {
+  background: #1a1a2e;
+  color: #f5a623;
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 0.85rem;
+}
+
+.boost-icon {
+  font-size: 1.3rem;
+}
+
+@keyframes boostPulse {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Highlight the nav brand during boost */
+.elo-boost-active .nav-brand {
+  color: #f5a623;
+  text-shadow: 0 0 12px rgba(245, 166, 35, 0.6);
+}

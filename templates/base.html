@@ -6,9 +6,21 @@
   <title>{% block title %}Paddr Elo{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body{% if elo_boost_active %} class="elo-boost-active"{% endif %}>
+
+{% if elo_boost_active %}
+<div class="boost-banner">
+  <span class="boost-icon">⚡</span>
+  <span class="boost-title">{{ elo_boost_label }}</span>
+  <span class="boost-badge">{{ (elo_boost_multiplier * 100 - 100) | int }}% ELO BOOST ACTIVE</span>
+  <span class="boost-icon">⚡</span>
+</div>
+{% endif %}
+
   <nav class="navbar">
-    <span class="nav-brand">🏓 Paddr Elo</span>
+    <span class="nav-brand">
+      {% if elo_boost_active %}⚡ {{ elo_boost_label }}{% else %}🏓 Paddr Elo{% endif %}
+    </span>
     <div class="nav-links">
       <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>Leaderboard</a>
       <a href="{{ url_for('record_game_page') }}" {% if request.endpoint == 'record_game_page' %}class="active"{% endif %}>Record Game</a>

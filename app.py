@@ -12,6 +12,11 @@ from werkzeug.security import check_password_hash
 import database
 import elo as elo_module
 
+# --- Boost Event Config (toggle here) ---
+ELO_BOOST_ACTIVE      = True
+ELO_BOOST_MULTIPLIER  = 1.5
+ELO_BOOST_LABEL       = "Elo Farm Wednesday"
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "paddr-local-dev-secret")
 
@@ -37,6 +42,15 @@ def load_user(user_id):
     if row:
         return User(row["id"], row["username"], row["is_admin"])
     return None
+
+
+@app.context_processor
+def inject_boost():
+    return {
+        "elo_boost_active":     ELO_BOOST_ACTIVE,
+        "elo_boost_label":      ELO_BOOST_LABEL,
+        "elo_boost_multiplier": ELO_BOOST_MULTIPLIER,
+    }
 
 
 def admin_required(f):
@@ -138,6 +152,7 @@ def record_game():
         winner_elos=(rows_by_id[winner_ids[0]]["elo"], rows_by_id[winner_ids[1]]["elo"]),
         loser_elos=(rows_by_id[loser_ids[0]]["elo"],  rows_by_id[loser_ids[1]]["elo"]),
         cups_left=cups_left,
+        multiplier=ELO_BOOST_MULTIPLIER if ELO_BOOST_ACTIVE else 1.0,
     )
 
     database.record_game(
@@ -149,8 +164,9 @@ def record_game():
     l_names = [rows_by_id[pid]["name"] for pid in loser_ids]
     wd = result["winner_deltas"]
     ld = result["loser_deltas"]
+    prefix = "⚡ BOOSTED — " if ELO_BOOST_ACTIVE else ""
     flash(
-        f"Game recorded! "
+        f"{prefix}Game recorded! "
         f"{w_names[0]} +{wd[0]:.1f}, {w_names[1]} +{wd[1]:.1f}  |  "
         f"{l_names[0]} {ld[0]:.1f}, {l_names[1]} {ld[1]:.1f}",
         "success",

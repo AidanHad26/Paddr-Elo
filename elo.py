@@ -24,7 +24,8 @@ def k_adjusted(cups_left: float) -> float:
 def calculate_elo_changes(
     winner_elos: tuple,
     loser_elos: tuple,
-    cups_left: int
+    cups_left: int,
+    multiplier: float = 1.0,
 ) -> dict:
     """
     Calculate new Elo ratings for all 4 players after a game.
@@ -47,8 +48,8 @@ def calculate_elo_changes(
 
     K = k_adjusted(cups_left)
 
-    winner_deltas = [K * (1.0 - E_winner), K * (1.0 - E_winner)]
-    loser_deltas  = [K * (0.0 - E_loser),  K * (0.0 - E_loser)]
+    winner_deltas = [K * (1.0 - E_winner) * multiplier, K * (1.0 - E_winner) * multiplier]
+    loser_deltas  = [K * (0.0 - E_loser)  * multiplier, K * (0.0 - E_loser)  * multiplier]
 
     return {
         "winner_new_elos": [
