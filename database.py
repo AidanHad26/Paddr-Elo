@@ -580,7 +580,7 @@ def get_site_stats():
             upset_rate = round(upsets / games_with_history * 100, 1) if games_with_history else 0
 
             cur.execute("""
-                SELECT COALESCE(SUM(CEIL((wins + losses) * 3.5))::int, 0) AS total_keystones
+                SELECT COALESCE(SUM(CEIL((wins + losses) * 3.5))::int / 2, 0) AS total_keystones
                 FROM players
             """)
             total_keystones = cur.fetchone()["total_keystones"]
