@@ -213,6 +213,28 @@ def get_leaderboard():
                             break
                     player["streak"] = f"{kind}{count}"
 
+            cur.execute("""
+                SELECT pid,
+                       ROUND(SUM(
+                           CASE WHEN is_winner THEN (5.0 - cups_left) * 0.4
+                                ELSE 2.0 END
+                       ))::int AS keystones
+                FROM (
+                    SELECT team1_player1_id AS pid, (winning_team=1) AS is_winner, cups_left FROM games
+                    UNION ALL
+                    SELECT team1_player2_id, (winning_team=1), cups_left FROM games
+                    UNION ALL
+                    SELECT team2_player1_id, (winning_team=2), cups_left FROM games
+                    UNION ALL
+                    SELECT team2_player2_id, (winning_team=2), cups_left FROM games
+                ) g
+                GROUP BY pid
+            """)
+            keystones_by_player = {row["pid"]: row["keystones"] for row in cur.fetchall()}
+
+            for player in players:
+                player["keystones"] = keystones_by_player.get(player["id"], 0)
+
             return players
 
 
@@ -580,8 +602,8 @@ def get_site_stats():
             upset_rate = round(upsets / games_with_history * 100, 1) if games_with_history else 0
 
             cur.execute("""
-                SELECT COALESCE(SUM(CEIL((wins + losses) * 3.5))::int / 2, 0) AS total_keystones
-                FROM players
+                SELECT COALESCE(ROUND(SUM(4.0 + (5.0 - cups_left) * 0.8))::int, 0) AS total_keystones
+                FROM games
             """)
             total_keystones = cur.fetchone()["total_keystones"]
 
