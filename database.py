@@ -494,6 +494,60 @@ def get_player_matchup_stats(player_id):
             return cur.fetchall()
 
 
+def get_player_avg_elos(player_id):
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                WITH player_games AS (
+                    SELECT id,
+                           CASE WHEN team1_player1_id = %(pid)s OR team1_player2_id = %(pid)s
+                                THEN 1 ELSE 2 END AS player_team
+                    FROM games
+                    WHERE team1_player1_id = %(pid)s OR team1_player2_id = %(pid)s
+                       OR team2_player1_id = %(pid)s OR team2_player2_id = %(pid)s
+                ),
+                opponent_elos AS (
+                    SELECT eh.elo_before
+                    FROM player_games pg
+                    JOIN elo_history eh ON eh.game_id = pg.id
+                    WHERE eh.player_id != %(pid)s
+                      AND (
+                        (pg.player_team = 1 AND eh.player_id IN (
+                            SELECT team2_player1_id FROM games WHERE id = pg.id
+                            UNION SELECT team2_player2_id FROM games WHERE id = pg.id
+                        )) OR
+                        (pg.player_team = 2 AND eh.player_id IN (
+                            SELECT team1_player1_id FROM games WHERE id = pg.id
+                            UNION SELECT team1_player2_id FROM games WHERE id = pg.id
+                        ))
+                      )
+                ),
+                teammate_elos AS (
+                    SELECT eh.elo_before
+                    FROM player_games pg
+                    JOIN elo_history eh ON eh.game_id = pg.id
+                    WHERE eh.player_id != %(pid)s
+                      AND (
+                        (pg.player_team = 1 AND eh.player_id IN (
+                            SELECT team1_player1_id FROM games WHERE id = pg.id
+                            UNION SELECT team1_player2_id FROM games WHERE id = pg.id
+                        )) OR
+                        (pg.player_team = 2 AND eh.player_id IN (
+                            SELECT team2_player1_id FROM games WHERE id = pg.id
+                            UNION SELECT team2_player2_id FROM games WHERE id = pg.id
+                        ))
+                      )
+                )
+                SELECT
+                    ROUND(AVG(o.elo_before)::numeric, 1) AS avg_opponent_elo,
+                    ROUND(AVG(t.elo_before)::numeric, 1) AS avg_teammate_elo
+                FROM (SELECT 1) dummy
+                LEFT JOIN LATERAL (SELECT AVG(elo_before) AS elo_before FROM opponent_elos) o ON true
+                LEFT JOIN LATERAL (SELECT AVG(elo_before) AS elo_before FROM teammate_elos) t ON true
+            """, {"pid": player_id})
+            return cur.fetchone()
+
+
 def get_site_stats():
     with get_db() as conn:
         with conn.cursor() as cur:

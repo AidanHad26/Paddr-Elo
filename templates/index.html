@@ -55,8 +55,8 @@
         </td>
         <td class="stat-cell lapped-stat">{{ player.lapped if player.lapped else '—' }}</td>
         <td class="stat-cell {% if player.streak.startswith('W') %}win-stat{% elif player.streak.startswith('L') %}loss-stat{% endif %}">{{ player.streak }}</td>
-        {% set total = player.wins + player.losses %}
-        <td class="stat-cell">{{ ((total * 3.5) | round(0, 'ceil') | int) if total > 0 else '—' }}</td>
+        {% set ks_total = (player.wins / 2) + (player.losses / 2) %}
+        <td class="stat-cell">{{ ((ks_total * 3.5) | round(0, 'ceil') | int) if ks_total > 0 else '—' }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -98,6 +98,7 @@
           <tbody id="partner-tbody"></tbody>
         </table>
         <p id="partner-empty" hidden class="matchup-empty">No partners yet.</p>
+        <div id="matchup-avg-elos" hidden style="margin-top:16px"></div>
       </div>
       <p id="matchup-error" hidden class="matchup-empty">Failed to load matchup data.</p>
     </div>

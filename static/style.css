@@ -702,6 +702,18 @@ label {
   margin-bottom: 10px;
 }
 
+.avg-elo-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+.avg-elo-row span:last-child {
+  font-weight: 600;
+  color: var(--accent);
+}
+
 /* ── Stats page ── */
 .stats-cards {
   display: grid;

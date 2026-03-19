@@ -169,6 +169,13 @@
           matchupContent.hidden = false;
           renderMatchupTable(data.h2h, h2hTbody, h2hTable, h2hEmpty);
           renderMatchupTable(data.partners, partnerTbody, partnerTable, partnerEmpty);
+          const avgOpponent = data.avg_opponent_elo ?? "—";
+          const avgTeammate = data.avg_teammate_elo ?? "—";
+          const avgElosDiv = document.getElementById("matchup-avg-elos");
+          avgElosDiv.innerHTML =
+            `<div class="avg-elo-row"><span>Avg Opponent Elo</span><span>${avgOpponent}</span></div>` +
+            `<div class="avg-elo-row"><span>Avg Teammate Elo</span><span>${avgTeammate}</span></div>`;
+          avgElosDiv.hidden = false;
         })
         .catch(() => {
           matchupLoading.hidden = true;

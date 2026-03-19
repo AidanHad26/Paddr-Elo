@@ -413,7 +413,13 @@ def api_player_matchups(player_id):
         entry = {"name": r["name"], "games": r["games"], "wins": r["wins"],
                  "losses": losses, "win_pct": win_pct}
         (h2h if r["kind"] == "h2h" else partners).append(entry)
-    return jsonify({"h2h": h2h, "partners": partners})
+    avg_elos = database.get_player_avg_elos(player_id)
+    return jsonify({
+        "h2h": h2h,
+        "partners": partners,
+        "avg_opponent_elo": avg_elos["avg_opponent_elo"],
+        "avg_teammate_elo": avg_elos["avg_teammate_elo"],
+    })
 
 
 @app.route("/api/stats")
