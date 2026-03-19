@@ -28,6 +28,7 @@
 <div class="card">
   <h2>Users ({{ users|length }})</h2>
   {% if users %}
+  <div class="table-scroll">
   <table class="players-table">
     <thead>
       <tr>
@@ -72,6 +73,7 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
   {% else %}
   <p style="color: var(--text-muted);">No users yet.</p>
   {% endif %}

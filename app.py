@@ -426,6 +426,11 @@ def stats():
     return render_template("stats.html")
 
 
+@app.route("/board")
+def board():
+    return render_template("board.html")
+
+
 # ---------------------------------------------------------------------------
 # Startup
 # ---------------------------------------------------------------------------

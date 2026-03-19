@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}The Paddr Board inc — Paddr Elo{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>The Paddr Board inc</h1>
+  <p class="sub-header">Leadership behind Paddr Elo</p>
+</div>
+
+<div class="board-cards">
+
+  <div class="board-card">
+    <div class="board-avatar">
+      <img src="{{ url_for('static', filename='images/haddad.jpg') }}"
+           alt="Haddad"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="board-initials" style="display:none">H</div>
+    </div>
+    <div class="board-name">Haddad</div>
+    <div class="board-title">Paddr Elo Commissioner<br>President<br>Leader</div>
+  </div>
+
+  <div class="board-card">
+    <div class="board-avatar">
+      <img src="{{ url_for('static', filename='images/friedman.jpg') }}"
+           alt="Friedman"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="board-initials" style="display:none">F</div>
+    </div>
+    <div class="board-name">Friedman</div>
+    <div class="board-title">ELOPA Executive Director</div>
+  </div>
+
+  <div class="board-card">
+    <div class="board-avatar">
+      <img src="{{ url_for('static', filename='images/kwas.jpg') }}"
+           alt="Kwas"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="board-initials" style="display:none">K</div>
+    </div>
+    <div class="board-name">Kwas</div>
+    <div class="board-title">BDD</div>
+  </div>
+
+  <div class="board-card">
+    <div class="board-avatar">
+      <img src="{{ url_for('static', filename='images/arin.jpg') }}"
+           alt="Arin"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="board-initials" style="display:none">A</div>
+    </div>
+    <div class="board-name">Arin</div>
+  </div>
+
+</div>
+
+<style>
+.board-cards {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 2rem;
+}
+.board-card {
+  background: var(--surface);
+  border: 1px solid var(--surface2);
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  width: 100%;
+  max-width: 220px;
+}
+.board-avatar {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 16px;
+  border: 3px solid var(--primary);
+}
+.board-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.board-initials {
+  width: 100%;
+  height: 100%;
+  background: var(--surface2);
+  color: var(--primary);
+  font-size: 2.5rem;
+  font-weight: 800;
+  align-items: center;
+  justify-content: center;
+}
+.board-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.board-title {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+</style>
+{% endblock %}

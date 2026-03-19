@@ -277,11 +277,21 @@
     });
   }
 
+  // ── Hamburger nav toggle ────────────────────────────────────────────────
+  function initHamburger() {
+    const hamburger = document.getElementById('nav-hamburger');
+    const navLinks = document.getElementById('nav-links');
+    if (!hamburger || !navLinks) return;
+    hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
+    navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+  }
+
   // ── Init ───────────────────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", () => {
     initPlayerCombos();
     attachGameFormValidation();
     attachRadioToggle();
     initPlayerModal();
+    initHamburger();
   });
 })();

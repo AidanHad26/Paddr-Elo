@@ -23,6 +23,10 @@
     <div class="stat-card-value" id="stat-upset-rate">—</div>
     <div class="stat-card-label">Upset Rate</div>
   </div>
+  <div class="stat-card">
+    <div class="stat-card-value" id="stat-total-keystones">—</div>
+    <div class="stat-card-label">Total Keystones</div>
+  </div>
 </div>
 
 <div class="stats-section">
@@ -152,6 +156,7 @@
       document.getElementById("stat-total-games").textContent = data.summary.total_games;
       document.getElementById("stat-total-players").textContent = data.summary.total_players;
       document.getElementById("stat-upset-rate").textContent = data.summary.upset_rate + "%";
+      document.getElementById("stat-total-keystones").textContent = data.summary.total_keystones ?? "—";
 
       // Activity chart
       if (data.activity.length) {

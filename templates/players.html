@@ -18,6 +18,7 @@
 <div class="card">
   <h2>Roster ({{ players|length }} player{% if players|length != 1 %}s{% endif %})</h2>
   {% if players %}
+  <div class="table-scroll">
   <table class="players-table">
     <thead>
       <tr>
@@ -48,6 +49,7 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
   {% else %}
   <p style="color: var(--text-muted);">No players yet. Add one above to get started.</p>
   {% endif %}

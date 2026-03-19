@@ -525,6 +525,12 @@ def get_site_stats():
             upsets = summary_row["upsets"] or 0
             upset_rate = round(upsets / games_with_history * 100, 1) if games_with_history else 0
 
+            cur.execute("""
+                SELECT COALESCE(SUM(CEIL((wins + losses) * 3.5))::int, 0) AS total_keystones
+                FROM players
+            """)
+            total_keystones = cur.fetchone()["total_keystones"]
+
             # Activity: games per week, last 16 weeks
             cur.execute("""
                 SELECT DATE_TRUNC('week', played_at) AS week, COUNT(*) AS games
@@ -770,6 +776,7 @@ def get_site_stats():
             "total_games": total_games,
             "total_players": total_players,
             "upset_rate": upset_rate,
+            "total_keystones": total_keystones,
         },
         "activity": activity,
         "cups_dist": cups_dist,

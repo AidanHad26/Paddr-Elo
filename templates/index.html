@@ -27,6 +27,7 @@
         <th>Win %</th>
         <th>Lapped</th>
         <th>Streak</th>
+        <th>Keystones</th>
       </tr>
     </thead>
     <tbody>
@@ -54,6 +55,8 @@
         </td>
         <td class="stat-cell lapped-stat">{{ player.lapped if player.lapped else '—' }}</td>
         <td class="stat-cell {% if player.streak.startswith('W') %}win-stat{% elif player.streak.startswith('L') %}loss-stat{% endif %}">{{ player.streak }}</td>
+        {% set total = player.wins + player.losses %}
+        <td class="stat-cell">{{ ((total * 3.5) | round(0, 'ceil') | int) if total > 0 else '—' }}</td>
       </tr>
       {% endfor %}
     </tbody>

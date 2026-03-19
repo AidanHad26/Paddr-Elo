@@ -162,7 +162,8 @@ h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 16px; color: var(--text
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .leaderboard-table {
@@ -796,4 +797,65 @@ label {
 .elo-boost-active .nav-brand {
   color: #f5a623;
   text-shadow: 0 0 12px rgba(245, 166, 35, 0.6);
+}
+
+/* ── Utility ── */
+.table-scroll { overflow-x: auto; }
+
+/* ── Hamburger button ── */
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 6px;
+  flex-direction: column;
+  gap: 5px;
+}
+.nav-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+  .nav-hamburger { display: flex; }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-direction: column;
+    padding: 8px 0;
+    z-index: 99;
+  }
+  .nav-links.open { display: flex; }
+  .nav-links a {
+    padding: 12px 24px;
+    border-radius: 0;
+  }
+
+  .nav-user .nav-username { display: none; }
+
+  .container { padding: 20px 16px; }
+
+  .page-header { flex-wrap: wrap; gap: 12px; }
+
+  .add-player-form { flex-wrap: wrap; }
+  .add-player-form .btn { width: 100%; }
+
+  .board-card { width: 100%; max-width: 280px; }
+
+  .elo-modal { padding: 16px; }
+
+  .boost-banner { font-size: 0.85rem; gap: 8px; }
 }
