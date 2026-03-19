@@ -13,7 +13,7 @@ import database
 import elo as elo_module
 
 # --- Boost Event Config (toggle here) ---
-ELO_BOOST_ACTIVE      = True
+ELO_BOOST_ACTIVE      = False
 ELO_BOOST_MULTIPLIER  = 1.5
 ELO_BOOST_LABEL       = "Elo Farm Wednesday"
 
@@ -155,9 +155,13 @@ def record_game():
         multiplier=ELO_BOOST_MULTIPLIER if ELO_BOOST_ACTIVE else 1.0,
     )
 
+    data_point_raw = request.form.get("data_point", "")
+    data_point = data_point_raw if data_point_raw in ("1_full", "two_halfs") else None
+
     database.record_game(
         t1p1, t1p2, t2p1, t2p2, winner, cups_left,
         winner_ids, loser_ids, result, rows_by_id,
+        data_point=data_point,
     )
 
     w_names = [rows_by_id[pid]["name"] for pid in winner_ids]

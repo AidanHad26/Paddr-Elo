@@ -77,6 +77,11 @@ def init_db():
             cur.execute("""
                 ALTER TABLE players ADD COLUMN IF NOT EXISTS lapped INTEGER NOT NULL DEFAULT 0
             """)
+            # Add data_point column if missing
+            cur.execute("""
+                ALTER TABLE games ADD COLUMN IF NOT EXISTS data_point TEXT
+                    CHECK (data_point IN ('1_full', 'two_halfs'))
+            """)
             # Upgrade cups_left from INTEGER to REAL if needed
             cur.execute("""
                 SELECT data_type FROM information_schema.columns
@@ -261,16 +266,16 @@ def delete_player(player_id):
 # ── Game queries ──────────────────────────────────────────────────────────────
 
 def record_game(t1p1, t1p2, t2p1, t2p2, winner, cups_left,
-                winner_ids, loser_ids, elo_result, rows_by_id):
+                winner_ids, loser_ids, elo_result, rows_by_id, data_point=None):
     with get_db() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """INSERT INTO games
                    (team1_player1_id, team1_player2_id,
                     team2_player1_id, team2_player2_id,
-                    winning_team, cups_left)
-                   VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
-                (t1p1, t1p2, t2p1, t2p2, winner, cups_left),
+                    winning_team, cups_left, data_point)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                (t1p1, t1p2, t2p1, t2p2, winner, cups_left, data_point),
             )
             game_id = cur.fetchone()["id"]
 
@@ -545,6 +550,20 @@ def get_site_stats():
                 for r in cur.fetchall()
             ]
 
+            # Data point distribution (overall split)
+            cur.execute("""
+                SELECT
+                    COUNT(*) FILTER (WHERE data_point = '1_full') AS one_full,
+                    COUNT(*) FILTER (WHERE data_point = 'two_halfs') AS two_halfs
+                FROM games
+                WHERE data_point IS NOT NULL
+            """)
+            row = cur.fetchone()
+            data_point_dist = {
+                "one_full": row["one_full"] or 0,
+                "two_halfs": row["two_halfs"] or 0,
+            }
+
             # Top 10 biggest Elo swings
             cur.execute("""
                 SELECT
@@ -754,6 +773,7 @@ def get_site_stats():
         },
         "activity": activity,
         "cups_dist": cups_dist,
+        "data_point_dist": data_point_dist,
         "top_swings": top_swings,
         "current_streak": current_streak_best,
         "alltime_streak": alltime_streak_best,

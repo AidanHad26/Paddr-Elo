@@ -94,6 +94,15 @@
 </div>
 
 <div class="stats-section">
+  <h2>Data Points</h2>
+  <p style="color:var(--text-muted);font-size:0.9rem;margin-top:-0.5rem;margin-bottom:1rem">Split between winning team cup configurations across all recorded data points.</p>
+  <div class="chart-wrap" style="max-width:300px;margin:0 auto">
+    <canvas id="datapoint-chart"></canvas>
+    <p id="datapoint-empty" hidden class="chart-empty">No data point entries yet.</p>
+  </div>
+</div>
+
+<div class="stats-section">
   <h2>Games per Week</h2>
   <div class="chart-wrap">
     <canvas id="activity-chart" height="120"></canvas>
@@ -196,6 +205,43 @@
       } else {
         document.getElementById("cups-chart").hidden = true;
         document.getElementById("cups-empty").hidden = false;
+      }
+
+      // Data point distribution chart (doughnut)
+      const dp = data.data_point_dist;
+      const dpTotal = (dp && dp.one_full + dp.two_halfs) || 0;
+      if (dpTotal > 0) {
+        new Chart(document.getElementById("datapoint-chart"), {
+          type: "doughnut",
+          data: {
+            labels: ["1 Full", "Two Halfs"],
+            datasets: [{
+              data: [dp.one_full, dp.two_halfs],
+              backgroundColor: ["rgba(233,69,96,0.75)", "rgba(100,160,255,0.75)"],
+              borderColor: ["#e94560", "#64a0ff"],
+              borderWidth: 2,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { display: true, labels: { color: TICK } },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    const val = ctx.parsed;
+                    const pct = Math.round(val / dpTotal * 100);
+                    return ` ${ctx.label}: ${val} (${pct}%)`;
+                  },
+                },
+              },
+            },
+          },
+        });
+      } else {
+        document.getElementById("datapoint-chart").hidden = true;
+        document.getElementById("datapoint-empty").hidden = false;
       }
 
       // Best duo
