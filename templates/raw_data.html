@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Raw Data — Paddr Elo{% endblock %}
+
+{% block content %}
+<h1>Raw Data</h1>
+
+<div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+  <button class="btn btn-primary" onclick="showTab('players')">Players ({{ players|length }})</button>
+  <button class="btn btn-secondary" onclick="showTab('games')">Games ({{ games|length }})</button>
+  <button class="btn btn-secondary" onclick="showTab('elo_history')">Elo History ({{ elo_history|length }})</button>
+  <button class="btn btn-secondary" onclick="showTab('users')">Users ({{ users|length }})</button>
+</div>
+
+<!-- Players -->
+<div id="tab-players" class="card">
+  <h2>players</h2>
+  {% if players %}
+  <div class="table-scroll">
+  <table class="players-table">
+    <thead>
+      <tr>
+        <th>id</th><th>name</th><th>elo</th><th>wins</th><th>losses</th><th>lapped</th><th>created_at</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in players %}
+      <tr>
+        <td style="color: var(--text-muted);">{{ p.id }}</td>
+        <td>{{ p.name }}</td>
+        <td>{{ "%.2f"|format(p.elo) }}</td>
+        <td>{{ p.wins }}</td>
+        <td>{{ p.losses }}</td>
+        <td>{{ p.lapped }}</td>
+        <td style="color: var(--text-muted); font-size: 0.85rem;">{{ p.created_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p style="color: var(--text-muted);">No players.</p>
+  {% endif %}
+</div>
+
+<!-- Games -->
+<div id="tab-games" class="card" style="display: none;">
+  <h2>games</h2>
+  {% if games %}
+  <div class="table-scroll">
+  <table class="players-table">
+    <thead>
+      <tr>
+        <th>id</th><th>team1_player1</th><th>team1_player2</th><th>team2_player1</th><th>team2_player2</th><th>winning_team</th><th>cups_left</th><th>data_point</th><th>played_at</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in games %}
+      <tr>
+        <td style="color: var(--text-muted);">{{ g.id }}</td>
+        <td>{{ g.team1_player1 }}</td>
+        <td>{{ g.team1_player2 }}</td>
+        <td>{{ g.team2_player1 }}</td>
+        <td>{{ g.team2_player2 }}</td>
+        <td style="text-align: center;">{{ g.winning_team }}</td>
+        <td style="text-align: center;">{{ g.cups_left }}</td>
+        <td style="color: var(--text-muted); font-size: 0.85rem;">{{ g.data_point or '—' }}</td>
+        <td style="color: var(--text-muted); font-size: 0.85rem;">{{ g.played_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p style="color: var(--text-muted);">No games.</p>
+  {% endif %}
+</div>
+
+<!-- Elo History -->
+<div id="tab-elo_history" class="card" style="display: none;">
+  <h2>elo_history</h2>
+  {% if elo_history %}
+  <div class="table-scroll">
+  <table class="players-table">
+    <thead>
+      <tr>
+        <th>id</th><th>game_id</th><th>player_id</th><th>elo_before</th><th>elo_after</th><th>delta</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in elo_history %}
+      <tr>
+        <td style="color: var(--text-muted);">{{ row.id }}</td>
+        <td>{{ row.game_id }}</td>
+        <td>{{ row.player_id }}</td>
+        <td>{{ "%.2f"|format(row.elo_before) }}</td>
+        <td>{{ "%.2f"|format(row.elo_after) }}</td>
+        <td class="{{ 'delta-pos' if row.delta >= 0 else 'delta-neg' }}">{{ "%+.2f"|format(row.delta) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p style="color: var(--text-muted);">No elo history.</p>
+  {% endif %}
+</div>
+
+<!-- Users -->
+<div id="tab-users" class="card" style="display: none;">
+  <h2>users</h2>
+  {% if users %}
+  <div class="table-scroll">
+  <table class="players-table">
+    <thead>
+      <tr>
+        <th>id</th><th>username</th><th>is_admin</th><th>created_at</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td style="color: var(--text-muted);">{{ u.id }}</td>
+        <td>{{ u.username }}</td>
+        <td>
+          {% if u.is_admin %}
+            <span class="admin-badge">admin</span>
+          {% else %}
+            <span style="color: var(--text-muted); font-size: 0.85rem;">false</span>
+          {% endif %}
+        </td>
+        <td style="color: var(--text-muted); font-size: 0.85rem;">{{ u.created_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p style="color: var(--text-muted);">No users.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const tabs = ['players', 'games', 'elo_history', 'users'];
+  function showTab(name) {
+    tabs.forEach(t => {
+      document.getElementById('tab-' + t).style.display = (t === name) ? '' : 'none';
+    });
+    document.querySelectorAll('.btn').forEach((btn, i) => {
+      btn.className = tabs[i] === name ? 'btn btn-primary' : 'btn btn-secondary';
+    });
+  }
+</script>
+{% endblock %}

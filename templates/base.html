@@ -33,6 +33,7 @@
       <a href="{{ url_for('board') }}" {% if request.endpoint == 'board' %}class="active"{% endif %}>The Paddr Board inc</a>
       {% if current_user.is_authenticated and current_user.is_admin %}
         <a href="{{ url_for('admin_users') }}" {% if request.endpoint in ('admin_users', 'admin_add_user', 'admin_delete_user', 'admin_reset_password') %}class="active"{% endif %}>Users</a>
+        <a href="{{ url_for('raw_data') }}" {% if request.endpoint == 'raw_data' %}class="active"{% endif %}>Raw Data</a>
       {% endif %}
     </div>
     <div class="nav-user">
