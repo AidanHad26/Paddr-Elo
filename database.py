@@ -915,3 +915,44 @@ def delete_game(game_id):
             cur.execute("DELETE FROM elo_history WHERE game_id = %s", (game_id,))
             cur.execute("DELETE FROM games WHERE id = %s", (game_id,))
     return True
+
+
+# ── Raw data queries ──────────────────────────────────────────────────────────
+
+def get_raw_players():
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, name, elo, wins, losses, lapped, created_at FROM players ORDER BY id")
+            return cur.fetchall()
+
+
+def get_raw_games():
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT g.id,
+                       p1.name AS team1_player1, p2.name AS team1_player2,
+                       p3.name AS team2_player1, p4.name AS team2_player2,
+                       g.winning_team, g.cups_left, g.data_point, g.played_at
+                FROM games g
+                JOIN players p1 ON p1.id = g.team1_player1_id
+                JOIN players p2 ON p2.id = g.team1_player2_id
+                JOIN players p3 ON p3.id = g.team2_player1_id
+                JOIN players p4 ON p4.id = g.team2_player2_id
+                ORDER BY g.id
+            """)
+            return cur.fetchall()
+
+
+def get_raw_elo_history():
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, game_id, player_id, elo_before, elo_after, delta FROM elo_history ORDER BY id")
+            return cur.fetchall()
+
+
+def get_raw_users():
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, username, is_admin, created_at FROM users ORDER BY id")
+            return cur.fetchall()

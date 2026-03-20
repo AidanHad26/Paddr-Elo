@@ -438,6 +438,22 @@ def board():
 
 
 # ---------------------------------------------------------------------------
+# Admin: raw data
+# ---------------------------------------------------------------------------
+
+@app.route("/admin/raw-data")
+@login_required
+@admin_required
+def raw_data():
+    players = database.get_raw_players()
+    games = database.get_raw_games()
+    elo_history = database.get_raw_elo_history()
+    users = database.get_raw_users()
+    return render_template("raw_data.html", players=players, games=games,
+                           elo_history=elo_history, users=users)
+
+
+# ---------------------------------------------------------------------------
 # Startup
 # ---------------------------------------------------------------------------
 
