@@ -764,6 +764,17 @@ label {
   padding: 40px 0;
 }
 
+/* === FRAUD BANNER === */
+.fraud-banner {
+  background: #8b0000;
+  color: #fff;
+  text-align: center;
+  padding: 8px 20px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
 /* === ELO BOOST EVENT === */
 .boost-banner {
   background: linear-gradient(135deg, #f5a623, #f7c948, #f5a623);
