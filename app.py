@@ -13,7 +13,7 @@ import database
 import elo as elo_module
 
 # --- Boost Event Config (toggle here) ---
-ELO_BOOST_ACTIVE      = True
+ELO_BOOST_ACTIVE      = False
 ELO_BOOST_MULTIPLIER  = 1.1
 ELO_BOOST_LABEL       = "Post Bye Week"
 
