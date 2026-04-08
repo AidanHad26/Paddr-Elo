@@ -764,47 +764,6 @@ label {
   padding: 40px 0;
 }
 
-/* === FRAUD BANNER === */
-.fraud-banner {
-  background: linear-gradient(135deg, #c0392b, #e74c3c, #c0392b);
-  background-size: 200% 200%;
-  animation: fraudPulse 3s ease infinite;
-  color: #fff;
-  text-align: center;
-  padding: 10px 20px;
-  font-weight: 700;
-  font-size: 1rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 14px;
-  letter-spacing: 0.05em;
-}
-
-.fraud-title {
-  font-size: 1.2rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.fraud-badge {
-  background: #1a1a2e;
-  color: #e74c3c;
-  border-radius: 20px;
-  padding: 3px 12px;
-  font-size: 0.85rem;
-}
-
-.fraud-icon {
-  font-size: 1.3rem;
-}
-
-@keyframes fraudPulse {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 /* === ELO BOOST EVENT === */
 .boost-banner {
   background: linear-gradient(135deg, #f5a623, #f7c948, #f5a623);
@@ -911,5 +870,4 @@ label {
   .elo-modal { padding: 16px; }
 
   .boost-banner { font-size: 0.85rem; gap: 8px; }
-  .fraud-banner { font-size: 0.85rem; gap: 8px; }
 }
